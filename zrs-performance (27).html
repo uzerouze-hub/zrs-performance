@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZRS Performance</title>
+<style>
+:root{--green:#fbb800;--green-dark:#c99200;--green-deep:#8a6400;--green-light:#fff8e1;--green-mid:#fdd85d;--black:#111;--gray:#555;--gray-mid:#888;--gray-light:#f5f5f5;--border:#e0e0e0;--white:#fff;--radius:14px;--radius-sm:9px;--shadow:0 2px 12px rgba(0,0,0,0.07);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#efefef;color:var(--black);min-height:100vh;}
+
+/* NAV */
+.nav{background:var(--black);position:sticky;top:0;z-index:200;}
+.nav-inner{max-width:620px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:0;}
+.logo{font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px;padding:16px 0;flex:1;}
+.logo span{color:var(--green);}
+.nav-tabs{display:flex;gap:0;}
+.nav-tab{padding:18px 14px;font-size:13px;font-weight:600;color:#888;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.nav-tab.active{color:#fff;border-bottom-color:var(--green);}
+.nav-tab:hover{color:#ccc;}
+
+/* PAGE SECTIONS */
+.page{display:none;padding-bottom:60px;}
+.page.active{display:block;}
+.wrap{max-width:620px;margin:0 auto;padding:0 12px;}
+
+/* HERO BANNER */
+.hero{background:var(--black);padding:28px 20px 24px;margin-bottom:0;}
+.hero-inner{max-width:620px;margin:0 auto;}
+.hero h1{font-size:26px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;}
+.hero h1 span{color:var(--green);}
+.hero p{font-size:14px;color:#aaa;line-height:1.5;}
+
+/* ANNOUNCEMENTS PAGE */
+.announce-header{padding:20px 12px 10px;max-width:620px;margin:0 auto;}
+.announce-header h2{font-size:18px;font-weight:700;color:var(--black);}
+.announce-header p{font-size:13px;color:var(--gray-mid);margin-top:3px;}
+
+.preorder-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px 20px;max-width:620px;margin:0 auto;}
+@media(max-width:400px){.preorder-grid{grid-template-columns:1fr;}}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 12px 20px;max-width:620px;margin:0 auto;}
+.gallery-item{position:relative;aspect-ratio:1;overflow:hidden;background:var(--gray-light);cursor:pointer;border-radius:4px;}
+.gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.2s;}
+.gallery-item:hover img{transform:scale(1.04);}
+.gallery-caption{padding:5px 4px 2px;font-size:11px;color:var(--gray);line-height:1.3;}
+
+.preorder-card{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.preorder-img{width:100%;height:160px;object-fit:cover;background:#eee;display:block;}
+.preorder-img-placeholder{width:100%;height:160px;background:var(--gray-light);display:flex;align-items:center;justify-content:center;color:#ccc;font-size:32px;}
+.preorder-body{padding:12px 14px 14px;}
+.preorder-tag{display:inline-block;background:var(--green-light);color:var(--green-dark);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px;margin-bottom:7px;}
+.preorder-name{font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px;}
+.preorder-desc{font-size:12px;color:var(--gray);line-height:1.5;margin-bottom:8px;}
+.preorder-price{font-size:16px;font-weight:700;color:var(--green);}
+.preorder-price-note{font-size:11px;color:var(--gray-mid);margin-top:2px;}
+.preorder-btn{margin-top:10px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.preorder-btn:active{opacity:0.85;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--gray-mid);grid-column:1/-1;}
+.empty-state .e-icon{font-size:36px;margin-bottom:12px;}
+.empty-state p{font-size:14px;}
+
+/* ORDER FORM */
+.card{background:var(--white);border-radius:var(--radius);margin:12px auto;max-width:620px;overflow:hidden;box-shadow:var(--shadow);}
+.card-header{padding:16px 18px 13px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px;}
+.step-dot{width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.card-header h2{font-size:15px;font-weight:700;color:var(--black);}
+.card-header p{font-size:12px;color:var(--gray-mid);margin-top:1px;}
+.card-body{padding:14px 18px 18px;}
+
+/* PRODUCT CARDS */
+.product-list{display:flex;flex-direction:column;gap:10px;}
+.product-item{border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;cursor:pointer;transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;}
+.product-item:hover{border-color:var(--green-mid);}
+.product-item.selected{border-color:var(--green);}
+.product-item-top{display:flex;align-items:stretch;}
+.product-thumb{width:80px;height:80px;object-fit:cover;flex-shrink:0;background:#f0f0f0;display:block;}
+.product-thumb-placeholder{width:80px;height:80px;background:var(--gray-light);display:flex;align-items:center;justify-content:center;color:#ccc;font-size:22px;flex-shrink:0;}
+.product-info-col{flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;}
+.product-name{font-size:14px;font-weight:700;color:var(--black);margin-bottom:2px;}
+.product-note-tag{font-size:11px;color:var(--gray-mid);margin-bottom:4px;}
+.product-price-row{display:flex;align-items:center;justify-content:space-between;}
+.product-price{font-size:15px;font-weight:700;color:var(--green);}
+.product-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-right:2px;}
+.product-item.selected .product-radio{border-color:var(--green);background:var(--green);}
+.product-item.selected .product-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;}
+.product-desc-row{border-top:1px solid #f5f5f5;padding:8px 12px;font-size:12px;color:var(--gray);line-height:1.5;display:none;}
+.product-item.selected .product-desc-row{display:block;}
+
+/* QTY */
+.qty-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;}
+.qty-label{font-size:14px;color:var(--gray);font-weight:600;}
+.qty-controls{display:flex;align-items:center;gap:14px;}
+.qty-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);font-size:20px;color:var(--black);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+.qty-btn:active{background:var(--gray-light);}
+.qty-num{font-size:18px;font-weight:700;min-width:28px;text-align:center;}
+
+/* FIELDS */
+.field{margin-bottom:13px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--black);background:var(--white);font-family:inherit;outline:none;transition:border-color 0.15s;-webkit-appearance:none;appearance:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.1);}
+.field textarea{resize:vertical;min-height:72px;line-height:1.5;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+
+/* PAYMENT */
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pay-option{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer;transition:border-color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;position:relative;}
+.pay-option:hover{border-color:var(--green-mid);}
+.pay-option.selected{border-color:var(--green);background:var(--green-light);}
+.pay-name{font-size:14px;font-weight:700;color:var(--black);}
+.pay-sub{font-size:11px;color:var(--gray-mid);margin-top:2px;}
+.pay-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);position:absolute;top:11px;right:11px;display:flex;align-items:center;justify-content:center;}
+.pay-option.selected .pay-check{border-color:var(--green);background:var(--green);}
+.pay-option.selected .pay-check::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;}
+.cod-note{display:none;margin-top:10px;background:#FFF8E1;border:1px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:#5D4037;line-height:1.5;}
+.gcash-box{display:none;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius-sm);padding:13px 15px;margin-top:12px;}
+.gcash-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--green-dark);margin-bottom:5px;}
+.gcash-name{font-size:15px;font-weight:700;color:var(--green-deep);}
+.gcash-num{font-size:22px;font-weight:700;color:var(--green);letter-spacing:1px;margin-top:2px;}
+.gcash-hint{font-size:12px;color:var(--green-dark);margin-top:6px;line-height:1.4;}
+
+/* SUMMARY */
+.summary-box{background:var(--gray-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
+.summary-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:13px;color:var(--gray);padding:3px 0;gap:10px;}
+.summary-row span:last-child{font-weight:600;color:var(--black);text-align:right;}
+.summary-row.total{border-top:1px solid var(--border);padding-top:10px;margin-top:6px;font-weight:700;font-size:17px;color:var(--black);}
+.summary-row.total span:last-child{color:var(--green);}
+.error-msg{display:none;background:#FFEBEE;border:1px solid #EF9A9A;border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:#B71C1C;margin-bottom:12px;line-height:1.5;}
+.submit-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:15px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent;}
+.submit-btn:hover{background:var(--green-dark);}
+.submit-btn:active{transform:scale(0.98);}
+
+/* SUCCESS */
+.success-screen{display:none;max-width:620px;margin:20px auto;background:var(--white);border-radius:var(--radius);padding:40px 24px;text-align:center;box-shadow:var(--shadow);}
+.success-icon{width:68px;height:68px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:32px;}
+.success-title{font-size:22px;font-weight:700;margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--gray);line-height:1.6;max-width:320px;margin:0 auto 20px;}
+.success-detail{background:var(--green-light);border-radius:var(--radius-sm);padding:14px;text-align:left;margin-bottom:20px;}
+.sd-row{display:flex;justify-content:space-between;font-size:13px;color:var(--gray);padding:3px 0;gap:10px;}
+.sd-row span:last-child{font-weight:600;color:var(--black);text-align:right;}
+.order-again-btn{background:transparent;color:var(--green);border:1.5px solid var(--green);border-radius:var(--radius);padding:12px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+
+/* ADMIN */
+.admin-login{max-width:420px;margin:40px auto;background:var(--white);border-radius:var(--radius);padding:32px 24px;box-shadow:var(--shadow);}
+.admin-login h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.admin-login p{font-size:13px;color:var(--gray-mid);margin-bottom:22px;}
+.admin-panel{max-width:620px;margin:0 auto;padding:12px 12px 60px;}
+.admin-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-top:4px;}
+.admin-topbar h2{font-size:18px;font-weight:700;}
+.admin-logout{font-size:13px;color:var(--gray-mid);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:inherit;}
+.admin-section{background:var(--white);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+.admin-section h3{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--black);}
+.admin-field{margin-bottom:11px;}
+.admin-field label{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;}
+.admin-field input,.admin-field textarea,.admin-field select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--black);background:var(--white);font-family:inherit;outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+.admin-field input:focus,.admin-field textarea:focus,.admin-field select:focus{border-color:var(--green);}
+.admin-field textarea{min-height:70px;resize:vertical;line-height:1.5;}
+.admin-btn{background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.admin-btn:active{opacity:0.85;}
+.admin-btn.danger{background:#E24B4A;}
+.admin-btn.secondary{background:transparent;color:var(--green);border:1.5px solid var(--green);}
+.img-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.img-row input{flex:1;min-width:0;}
+.img-preview{width:60px;height:60px;border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--border);display:none;}
+.preorder-list-admin{display:flex;flex-direction:column;gap:10px;}
+.preorder-admin-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;}
+.preorder-admin-thumb{width:56px;height:56px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-light);flex-shrink:0;}
+.preorder-admin-info{flex:1;}
+.preorder-admin-name{font-size:14px;font-weight:700;color:var(--black);}
+.preorder-admin-price{font-size:13px;color:var(--green);font-weight:600;margin-top:2px;}
+.preorder-admin-actions{display:flex;gap:6px;margin-top:6px;}
+.mini-btn{font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;}
+.mini-btn.del{background:#FFEBEE;color:#B71C1C;}
+.mini-btn.edit{background:var(--green-light);color:var(--green-dark);}
+.product-admin-list{display:flex;flex-direction:column;gap:8px;}
+.product-admin-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;display:flex;align-items:center;gap:10px;}
+.product-admin-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:var(--gray-light);flex-shrink:0;}
+.product-admin-info{flex:1;}
+.product-admin-name{font-size:13px;font-weight:700;}
+.product-admin-price{font-size:12px;color:var(--green);font-weight:600;}
+.tab-btns{display:flex;gap:8px;margin-bottom:14px;}
+.tab-btn{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;background:var(--white);color:var(--gray);font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.tab-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--black);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.upload-hint{font-size:11px;color:var(--gray-mid);margin-top:4px;}
+.zrs-loader{position:fixed;inset:0;background:var(--black);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s;}
+.zrs-loader.hidden{opacity:0;pointer-events:none;}
+.zrs-spinner{width:36px;height:36px;border:3px solid #333;border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.zrs-loader-logo{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;}
+.zrs-loader-logo span{color:var(--green);}
+.zrs-loader-text{font-size:13px;color:#666;}
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:var(--radius-sm);}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<div class="zrs-loader" id="zrsLoader">
+  <div class="zrs-loader-logo">ZRS<span>.</span></div>
+  <div class="zrs-spinner"></div>
+  <div class="zrs-loader-text">Loading...</div>
+</div>
+
+<div class="nav">
+  <div class="nav-inner">
+    <div class="logo">ZRS<span>.</span></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showPage('announce',this)">Announcements</div>
+      <div class="nav-tab" onclick="showPage('order',this)">Order</div>
+      <div class="nav-tab" onclick="showPage('admin',this)">Admin</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ANNOUNCEMENTS PAGE ===== -->
+<div class="page active" id="page-announce">
+  <div style="background:var(--black);padding:24px 20px 20px;">
+    <div style="max-width:620px;margin:0 auto;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px;">Latest</div>
+      <div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:-0.3px;">Announcements</div>
+      <div style="font-size:13px;color:#aaa;margin-top:5px;">Pre-orders, customer builds, and updates from ZRS Performance.</div>
+    </div>
+  </div>
+  <!-- Feed filter tabs -->
+  <div style="max-width:620px;margin:0 auto;padding:14px 12px 0;display:flex;gap:8px;overflow-x:auto;align-items:center;">
+    <button onclick="loadFromSheet().then(()=>showToast('Feed refreshed!'))" style="background:none;border:none;color:var(--gray-mid);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;" title="Refresh feed">↻</button>
+    <button class="tab-btn active" id="feedAll" onclick="filterFeed(this,'all')" style="white-space:nowrap;">All</button>
+    <button class="tab-btn" id="feedPreorder" onclick="filterFeed(this,'preorder')" style="white-space:nowrap;">Pre-orders</button>
+    <button class="tab-btn" id="feedGallery" onclick="filterFeed(this,'gallery')" style="white-space:nowrap;">Customer Gallery</button>
+    <button class="tab-btn" id="feedAnnounce" onclick="filterFeed(this,'announcement')" style="white-space:nowrap;">Updates</button>
+  </div>
+  <div id="feedGrid">
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="e-icon">📦</div>
+      <p>No posts yet.<br>Check back soon!</p>
+    </div>
+  </div>
+</div>
+
+<!-- PRE-ORDER RESERVATION MODAL -->
+<div id="poModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;overflow-y:auto;padding:20px 12px 40px;">
+  <div style="background:var(--white);border-radius:var(--radius);max-width:480px;margin:0 auto;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="background:var(--black);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);margin-bottom:3px;">Pre-order</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;" id="poModalName">Item Name</div>
+      </div>
+      <button onclick="closePoModal()" style="background:none;border:none;color:#888;font-size:24px;cursor:pointer;line-height:1;padding:4px;">×</button>
+    </div>
+    <div style="padding:18px 20px 24px;">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:16px;line-height:1.5;">Fill in your details and we'll reach out via Facebook Messenger to confirm.</p>
+      <div class="field"><label>Full name</label><input type="text" id="poResName" placeholder="Juan dela Cruz" autocomplete="name"></div>
+      <div class="field"><label>Contact number</label><input type="tel" id="poResPhone" placeholder="09XX XXX XXXX" autocomplete="tel"></div>
+      <div class="field"><label>Facebook profile link <span style="font-weight:400;text-transform:none;color:var(--gray-mid)">(optional)</span></label><input type="url" id="poResProfile" placeholder="https://www.facebook.com/yourname"></div>
+      <div class="field"><label>Note (optional)</label><input type="text" id="poResNote" placeholder="Questions, preferred variant, etc."></div>
+      <div id="poResErr" style="display:none;background:#FFEBEE;border:1px solid #EF9A9A;border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:#B71C1C;margin-bottom:12px;"></div>
+      <button class="submit-btn" onclick="submitPoReservation()">Submit Reservation →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRE-ORDER SUCCESS MODAL -->
+<div id="poSuccessModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--white);border-radius:var(--radius);max-width:380px;width:100%;padding:36px 24px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="width:60px;height:60px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">✓</div>
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Reservation sent!</div>
+    <div style="font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:24px;">We'll message you on Facebook Messenger to confirm your reservation. You can also reach us at <a href='https://fb.com/@uze00' target='_blank' style='color:var(--green);font-weight:600;'>fb.com/@uze00</a>. Thanks!</div>
+    <button class="submit-btn" onclick="closePoSuccess()" style="max-width:200px;margin:0 auto;display:block;">Done</button>
+  </div>
+</div>
+
+<!-- ===== ORDER PAGE ===== -->
+<div class="page" id="page-order">
+  <div id="mainForm">
+
+    <div class="card" style="margin-top:12px;">
+      <div class="card-header">
+        <div class="step-dot">1</div>
+        <div><h2>Add items to your cart</h2><p>Tap + to add, adjust qty per item</p></div>
+      </div>
+      <div class="card-body">
+        <div class="product-list" id="productList"></div>
+      </div>
+    </div>
+
+    <div class="card" id="cartCard" style="display:none;">
+      <div class="card-header">
+        <div class="step-dot" style="background:#111;font-size:14px;">🛒</div>
+        <div><h2>Your cart</h2><p id="cartCount">0 items</p></div>
+      </div>
+      <div class="card-body">
+        <div id="cartList"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1.5px solid #f0f0f0;padding-top:12px;margin-top:4px;">
+          <div style="font-size:13px;color:var(--gray);">Cart total</div>
+          <div style="font-size:20px;font-weight:700;color:var(--green);" id="cartTotal">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-dot">2</div>
+        <div><h2>Your details</h2><p>So we know where to send it</p></div>
+      </div>
+      <div class="card-body">
+        <div class="field"><label>Full name</label><input type="text" id="fname" placeholder="Juan dela Cruz" autocomplete="name"></div>
+        <div class="field"><label>Contact number</label><input type="tel" id="phone" placeholder="09XX XXX XXXX" autocomplete="tel"></div>
+        <div class="field"><label>Facebook profile link <span style="font-weight:400;text-transform:none;color:var(--gray-mid)">(optional)</span></label><input type="url" id="profilelink" placeholder="https://www.facebook.com/yourname"></div>
+        <div class="field"><label>Complete address</label><textarea id="address" placeholder="House no., Street, Barangay, City, Province" autocomplete="street-address"></textarea></div>
+        <div class="field"><label>Note (optional)</label><input type="text" id="note" placeholder="Color, size, special request..."></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-dot">3</div>
+        <div><h2>Shipping method</h2><p>How do you want it delivered?</p></div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <select id="shipping" onchange="onShippingChange()">
+            <option value="">Select shipping method</option>
+            <option value="LBC">LBC</option>
+            <option value="J&T Express">J&T Express</option>
+            <option value="Lalamove/Grab">Lalamove / Grab</option>
+            <option value="Pickup">Pickup</option>
+          </select>
+          <div id="jtNote" style="display:none;margin-top:10px;background:#FFF8E1;border:1px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:#5D4037;line-height:1.5;">
+            ⚠️ <strong>J&T Express requires full payment</strong> before we ship. No COD available for this courier.
+          </div>
+          <div id="lalamoveNote" style="display:none;margin-top:10px;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius-sm);padding:12px 14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Book your Lalamove delivery</div>
+            <div style="font-size:13px;color:var(--green-deep);margin-bottom:10px;line-height:1.5;">Open the form below to enter your address and get a quote directly on Lalamove.</div>
+            <a href="https://delivery.lalamove.com/forms/PH5dd68764ef7b4c99878bbd860ce34476" target="_blank" style="display:inline-block;background:var(--green);color:#fff;font-size:13px;font-weight:700;padding:9px 18px;border-radius:var(--radius-sm);text-decoration:none;">Open Lalamove Form →</a>
+          </div>
+          <div id="meetupNote" style="display:none;margin-top:10px;background:var(--gray-light);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;font-size:13px;color:var(--gray);line-height:1.5;">
+            📍 <strong>Pickup address:</strong> Uze00, Quintos St. Sampaloc, Manila
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-dot">4</div>
+        <div><h2>Voucher code</h2><p>Have a discount code? Enter it here</p></div>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="voucherInput" placeholder="Enter code (e.g. ZRS10)" style="flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--black);background:var(--white);font-family:inherit;outline:none;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+          <button onclick="applyVoucher()" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 18px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">Apply</button>
+        </div>
+        <div id="voucherMsg" style="display:none;margin-top:8px;font-size:13px;border-radius:var(--radius-sm);padding:8px 12px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-dot">5</div>
+        <div><h2>Payment method</h2><p>Choose how you'll pay</p></div>
+      </div>
+      <div class="card-body">
+        <div class="payment-grid">
+          <div class="pay-option" onclick="selectPayment(this,'GCash')"><div class="pay-check"></div><div class="pay-name">GCash</div></div>
+          <div class="pay-option" onclick="selectPayment(this,'Maya')"><div class="pay-check"></div><div class="pay-name">Maya</div></div>
+          <div class="pay-option" onclick="selectPayment(this,'Maribank')"><div class="pay-check"></div><div class="pay-name">Maribank</div></div>
+          <div class="pay-option" onclick="selectPayment(this,'Chinabank')"><div class="pay-check"></div><div class="pay-name">Chinabank</div></div>
+          <div class="pay-option" onclick="selectPayment(this,'COD')"><div class="pay-check"></div><div class="pay-name">COD</div><div class="pay-sub">LBC only, with DP</div></div>
+          <div class="pay-option" onclick="selectPayment(this,'Cash on Pickup')"><div class="pay-check"></div><div class="pay-name">Cash on Pickup</div><div class="pay-sub">Pickup only</div></div>
+        </div>
+        <div class="cod-note" id="codNote">⚠️ COD is available via <strong>LBC only</strong> and requires a <strong>down payment (DP)</strong> before we ship. We'll message you on Facebook Messenger with the DP amount.</div>
+        <div class="gcash-box" id="paymentInfoBox" style="display:none;">
+          <div class="gcash-label" id="payInfoLabel">Send payment to</div>
+          <div class="gcash-name" id="payAccountName" style="display:none;">UZE Ramos</div>
+          <div class="gcash-num" id="payAccountNum" style="display:none;">0927 968 1135</div>
+          <div id="payQrWrap" style="display:none;margin-top:10px;text-align:center;">
+            <img id="payQrImg" src="" alt="QR Code" style="max-width:180px;width:100%;border-radius:var(--radius-sm);border:1px solid var(--green-mid);">
+            <div style="font-size:11px;color:var(--green-dark);margin-top:5px;">Scan QR to pay</div>
+          </div>
+          <div class="gcash-hint" style="margin-top:8px;">Screenshot your payment and send it to our Facebook page: <a href='https://fb.com/@uze00' target='_blank' style='color:var(--green-dark);font-weight:600;'>fb.com/@uze00</a>. Your order won't be processed until payment is confirmed.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-dot">6</div>
+        <div><h2>Review your order</h2><p>Double-check before placing</p></div>
+      </div>
+      <div class="card-body">
+        <div class="summary-box">
+          <div id="sumItems"></div>
+          <div class="summary-row"><span>Shipping</span><span id="sumShipping">—</span></div>
+          <div class="summary-row"><span>Payment</span><span id="sumPayment">—</span></div>
+          <div class="summary-row" id="sumDiscountRow" style="display:none;color:var(--green-dark);"><span>Discount</span><span id="sumDiscount">—</span></div>
+          <div class="summary-row total"><span>Total</span><span id="sumTotal">—</span></div>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+        <button class="submit-btn" onclick="submitOrder()">Place Order →</button>
+        <p style="text-align:center;font-size:12px;color:#bbb;margin-top:11px;">After placing your order, message us on Facebook: <a href='https://fb.com/@uze00' target='_blank' style='color:var(--green);'>fb.com/@uze00</a></p>
+        <div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 13px;margin-top:10px;font-size:12px;color:#5D4037;line-height:1.5;text-align:left;">
+          ⚠️ <strong>Note:</strong> The total shown does not include the shipping fee. Final amount with SF and payment confirmation will be discussed via DM on our Facebook page.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Order placed!</div>
+    <div class="success-sub">Message us on Facebook with your payment screenshot so we can process your order. Shipping fee and final details will be discussed via DM. <br><br><a href='https://fb.com/@uze00' target='_blank' style='display:inline-block;margin-top:6px;background:var(--green);color:#fff;padding:10px 20px;border-radius:var(--radius-sm);font-weight:700;text-decoration:none;font-size:14px;'>Message us on Facebook →</a></div>
+    <div class="success-detail" id="successDetail"></div>
+    <button class="order-again-btn" onclick="resetForm()">Place another order</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN PAGE ===== -->
+<div class="page" id="page-admin">
+
+  <!-- LOGIN -->
+  <div class="admin-login" id="adminLogin">
+    <h2>Admin Panel</h2>
+    <p>Enter your password to manage products and pre-orders.</p>
+    <div class="admin-field"><label>Password</label><input type="password" id="adminPwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <div id="adminLoginErr" style="font-size:13px;color:#B71C1C;margin-bottom:10px;display:none;">Wrong password. Try again.</div>
+    <button class="admin-btn" onclick="adminLogin()">Sign in</button>
+  </div>
+
+  <!-- PANEL -->
+  <div class="admin-panel" id="adminPanel" style="display:none;">
+    <div class="admin-topbar">
+      <h2>Admin Panel</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="admin-btn" id="syncNowBtn" onclick="syncNow()" style="padding:7px 14px;font-size:13px;">↑ Sync now</button>
+        <button class="admin-logout" onclick="adminLogout()">Sign out</button>
+      </div>
+    </div>
+
+    <div class="tab-btns">
+      <button class="tab-btn active" onclick="adminTab(this,'tabProducts')">Products</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabPreorder')">Pre-orders</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabOrders');loadOrders()">Orders</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabVouchers')">Vouchers</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabAppearance');loadAppearance()">Appearance</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabPaymentQR');renderPaymentQRAdmin()">Payment QRs</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabPosts');renderPostsAdmin()">Posts</button>
+      <button class="tab-btn" onclick="adminTab(this,'tabStoreInfo');loadStoreInfo()">Store Info</button>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tabProducts">
+      <div class="admin-section">
+        <h3 id="productFormTitle">Edit a product</h3>
+        <div class="admin-field"><label>Product</label>
+          <select id="editProductSelect" onchange="loadProductEdit()">
+            <option value="">— Select product to edit —</option>
+          </select>
+        </div>
+        <div id="productEditFields" style="display:none;">
+          <div class="admin-field"><label>Name</label><input type="text" id="editPName"></div>
+          <div class="admin-field"><label>Price (₱)</label><input type="number" id="editPPrice"></div>
+          <div class="admin-field"><label>Description</label><textarea id="editPDesc" placeholder="Short description of this item..."></textarea></div>
+          <div class="admin-field">
+            <label>Photo — paste image URL</label>
+            <div style="font-size:11px;color:var(--gray-mid);margin-bottom:6px;">Paste a <strong>Google Drive link</strong> directly — no need to change the format, it converts automatically. Make sure the file is set to <strong>"Anyone with the link"</strong> in Drive sharing settings.</div>
+            <div class="img-row">
+              <input type="url" id="editPImgUrl" placeholder="Paste Google Drive or any image link" oninput="previewImg('editPImgUrl','editPImgPreview')">
+              <img class="img-preview" id="editPImgPreview">
+            </div>
+          </div>
+          <div class="admin-field"><label>Note (optional)</label><input type="text" id="editPNote" placeholder="e.g. Price may vary — we'll confirm via DM"></div>
+          <div class="admin-field"><label>Stock remaining <span style="font-weight:400;text-transform:none;color:var(--gray-mid)">(buyers see Low Stock at 2 or below, Sold Out at 0)</span></label><input type="number" id="editPStock" min="0" placeholder="e.g. 10"></div>
+          <button class="admin-btn" onclick="saveProductEdit()" style="margin-top:4px;">Save changes</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h3>All products</h3>
+        <div class="product-admin-list" id="productAdminList"></div>
+      </div>
+    </div>
+
+    <!-- PREORDER TAB -->
+    <div id="tabPreorder" style="display:none;">
+      <div class="admin-section">
+        <h3 id="preorderFormTitle">Add pre-order item</h3>
+        <div class="admin-field"><label>Item name</label><input type="text" id="poName" placeholder="e.g. MTRT 32mm Elbow V2"></div>
+        <div class="admin-field"><label>Price (₱) — or leave 0 for TBA</label><input type="number" id="poPrice" placeholder="0"></div>
+        <div class="admin-field"><label>Description</label><textarea id="poDesc" placeholder="What is this item? Why should they pre-order?"></textarea></div>
+        <div class="admin-field">
+          <label>Photo — paste image URL</label>
+          <div style="font-size:11px;color:var(--gray-mid);margin-bottom:6px;">Paste a Google Drive link directly. Make sure sharing is set to <strong>"Anyone with the link"</strong>.</div>
+          <div class="img-row">
+            <input type="url" id="poImgUrl" placeholder="Paste Google Drive or any image link" oninput="previewImg('poImgUrl','poImgPreview')">
+            <img class="img-preview" id="poImgPreview">
+          </div>
+        </div>
+        <div class="admin-field"><label>ETA (optional)</label><input type="text" id="poEta" placeholder="e.g. 2–3 weeks, End of July"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          <button class="admin-btn" onclick="savePreorder()" id="poSaveBtn">Add item</button>
+          <button class="admin-btn secondary" onclick="cancelPreorderEdit()" id="poCancelBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h3>Current pre-order items</h3>
+        <div class="preorder-list-admin" id="preorderAdminList"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tabOrders" style="display:none;">
+      <div class="admin-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="margin:0;">All orders</h3>
+          <button class="admin-btn" onclick="loadOrders()" style="padding:8px 14px;font-size:13px;">↻ Refresh</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="tab-btn active" id="ordersTabBtn" onclick="switchOrdersView(this,'orders')">Orders</button>
+          <button class="tab-btn" id="preordersTabBtn" onclick="switchOrdersView(this,'preorders')">Pre-order reservations</button>
+          <button class="tab-btn" id="completedTabBtn" onclick="switchOrdersView(this,'completed')">Completed</button>
+        </div>
+        <div id="ordersLoading" style="text-align:center;padding:24px;color:var(--gray-mid);font-size:14px;">Loading...</div>
+        <div id="ordersList" style="display:none;"></div>
+        <div id="preordersList" style="display:none;"></div>
+        <div id="completedList" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- VOUCHERS TAB -->
+    <div id="tabVouchers" style="display:none;">
+      <div class="admin-section">
+        <h3 id="voucherFormTitle">Create voucher</h3>
+        <div class="admin-field"><label>Code</label><input type="text" id="vcCode" placeholder="e.g. ZRS10" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>
+        <div class="admin-field"><label>Discount type</label>
+          <select id="vcType" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--white);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;">
+            <option value="percent">Percentage (e.g. 10%)</option>
+            <option value="fixed">Fixed amount (e.g. ₱500 off)</option>
+          </select>
+        </div>
+        <div class="admin-field"><label>Discount value</label><input type="number" id="vcValue" placeholder="e.g. 10 for 10% or 500 for ₱500"></div>
+        <div class="admin-field"><label>Usage limit</label><input type="number" id="vcLimit" placeholder="e.g. 50" min="1"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          <button class="admin-btn" onclick="saveVoucher()" id="vcSaveBtn">Create voucher</button>
+          <button class="admin-btn secondary" onclick="cancelVoucherEdit()" id="vcCancelBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+      <div class="admin-section">
+        <h3>Active vouchers</h3>
+        <div id="voucherAdminList"></div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE TAB -->
+    <div id="tabAppearance" style="display:none;">
+      <div class="admin-section">
+        <h3>Shop identity</h3>
+        <div class="admin-field"><label>Shop name</label><input type="text" id="apShopName" placeholder="ZRS Performance"></div>
+        <div class="admin-field"><label>Tagline</label><input type="text" id="apTagline" placeholder="Incoming Items"></div>
+      </div>
+      <div class="admin-section">
+        <h3>Colors</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="admin-field">
+            <label>Accent color</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="apAccent" value="#fbb800" style="width:44px;height:36px;padding:2px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;">
+              <input type="text" id="apAccentHex" placeholder="#fbb800" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;outline:none;" oninput="syncColor('apAccentHex','apAccent')">
+            </div>
+          </div>
+          <div class="admin-field">
+            <label>Header background</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="apHeader" value="#111111" style="width:44px;height:36px;padding:2px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;">
+              <input type="text" id="apHeaderHex" placeholder="#111111" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;outline:none;" oninput="syncColor('apHeaderHex','apHeader')">
+            </div>
+          </div>
+          <div class="admin-field">
+            <label>Page background color</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="apBg" value="#efefef" style="width:44px;height:36px;padding:2px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;">
+              <input type="text" id="apBgHex" placeholder="#efefef" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;outline:none;" oninput="syncColor('apBgHex','apBg')">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="admin-section">
+        <h3>Page background image</h3>
+        <p style="font-size:13px;color:var(--gray-mid);margin-bottom:12px;line-height:1.5;">Paste an image URL or upload a photo. This replaces the solid background color when set.</p>
+        <div class="admin-field">
+          <label>Image URL</label>
+          <div class="img-row">
+            <input type="url" id="apBgImgUrl" placeholder="https://..." oninput="previewImg('apBgImgUrl','apBgImgPreview')">
+            <img class="img-preview" id="apBgImgPreview">
+          </div>
+        </div>
+        <div class="admin-field">
+          <label>Or upload a photo</label>
+          <input type="file" id="apBgImgFile" accept="image/*" onchange="fileToUrl('apBgImgFile','apBgImgUrl','apBgImgPreview')">
+        </div>
+        <div class="admin-field">
+          <label>Image style</label>
+          <select id="apBgStyle" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--white);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;">
+            <option value="cover">Cover (fills screen)</option>
+            <option value="repeat">Tile / pattern</option>
+            <option value="center">Centered, no repeat</option>
+          </select>
+        </div>
+        <button class="admin-btn secondary" style="margin-top:4px;" onclick="clearBgImage()">✕ Remove background image</button>
+      </div>
+      <div class="admin-section">
+        <h3>Button style</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div id="bsRounded" onclick="selectBtnStyle('rounded')" style="border:2px solid var(--green);border-radius:30px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">Rounded</div>
+          <div id="bsSharp" onclick="selectBtnStyle('sharp')" style="border:2px solid var(--border);border-radius:4px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;background:var(--white);color:var(--black);">Sharp</div>
+          <div id="bsPill" onclick="selectBtnStyle('pill')" style="border:2px solid var(--border);border-radius:50px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;background:var(--white);color:var(--black);">Pill</div>
+        </div>
+      </div>
+      <div class="admin-section" style="background:var(--green-light);border:1px solid var(--green-mid);">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--green-deep);">Preview &amp; save</div>
+            <div style="font-size:12px;color:var(--green-dark);margin-top:2px;">Changes preview instantly. Click Save to make them permanent.</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="admin-btn secondary" onclick="previewAppearance()">Preview</button>
+            <button class="admin-btn" onclick="saveAppearance()">Save appearance</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- POSTS TAB -->
+<div id="tabPosts" style="display:none;max-width:620px;margin:0 auto;padding:12px 12px 60px;">
+  <div class="admin-section">
+    <h3 id="postFormTitle">Add post</h3>
+    <div class="admin-field"><label>Type</label>
+      <select id="postType" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--white);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;">
+        <option value="preorder">Pre-order</option>
+        <option value="gallery">Customer Gallery</option>
+        <option value="announcement">Update / Announcement</option>
+      </select>
+    </div>
+    <div class="admin-field"><label>Title</label><input type="text" id="postTitle" placeholder="e.g. New Arrival: TSMP S2.75"></div>
+    <div class="admin-field"><label>Description</label><textarea id="postDesc" placeholder="Details about this post..."></textarea></div>
+    <div class="admin-field">
+      <label>Image URL</label>
+      <div style="font-size:11px;color:var(--gray-mid);margin-bottom:6px;">Paste an imgbb direct link.</div>
+      <div class="img-row">
+        <input type="url" id="postImgUrl" placeholder="https://i.ibb.co/..." oninput="previewImg('postImgUrl','postImgPreview')">
+        <img class="img-preview" id="postImgPreview">
+      </div>
+    </div>
+    <div class="admin-field" id="postPriceWrap"><label>Price (₱) — for pre-orders</label><input type="number" id="postPrice" placeholder="0"></div>
+    <div class="admin-field" id="postEtaWrap"><label>ETA — for pre-orders</label><input type="text" id="postEta" placeholder="e.g. 2–3 weeks"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+      <button class="admin-btn" onclick="savePost()" id="postSaveBtn">Add post</button>
+      <button class="admin-btn secondary" onclick="cancelPostEdit()" id="postCancelBtn" style="display:none;">Cancel</button>
+    </div>
+  </div>
+  <div class="admin-section">
+    <h3>All posts</h3>
+    <div id="postsAdminList"></div>
+  </div>
+</div>
+
+<!-- STORE INFO TAB -->
+<div id="tabStoreInfo" style="display:none;max-width:620px;margin:0 auto;padding:12px 12px 60px;">
+  <div class="admin-section">
+    <h3>Social media & contact</h3>
+    <p style="font-size:13px;color:var(--gray-mid);margin-bottom:14px;line-height:1.5;">These show in the footer on every page. Leave blank to hide.</p>
+    <div class="admin-field"><label>Facebook</label><input type="text" id="siFacebook" placeholder="fb.com/@uze00"></div>
+    <div class="admin-field"><label>TikTok</label><input type="text" id="siTiktok" placeholder="@zrsperformance"></div>
+    <div class="admin-field"><label>Instagram</label><input type="text" id="siInstagram" placeholder="@zrsperformance"></div>
+    <div class="admin-field"><label>YouTube</label><input type="text" id="siYoutube" placeholder="youtube.com/@zrs"></div>
+    <div class="admin-field"><label>Email</label><input type="email" id="siEmail" placeholder="zrsperformance@gmail.com"></div>
+    <div class="admin-field"><label>Address</label><input type="text" id="siAddress" placeholder="Quintos St. Sampaloc, Manila"></div>
+    <div class="admin-field"><label>Other (label: link)</label><input type="text" id="siOther" placeholder="e.g. Shopee: shopee.ph/zrs"></div>
+    <button class="admin-btn" onclick="saveStoreInfo()" style="margin-top:4px;">Save store info</button>
+  </div>
+</div>
+
+<!-- PAYMENT QR TAB - injected into admin panel above -->
+<script>
+// Patch: add tabPaymentQR to admin panel at runtime
+(function(){
+  var panel = document.getElementById('adminPanel');
+  if(!panel) return;
+  var div = document.createElement('div');
+  div.id = 'tabPaymentQR';
+  div.style.display = 'none';
+  var methods = ['GCash','Maya','Maribank','Chinabank'];
+  div.innerHTML = '<div class="admin-section"><h3>Payment QR codes</h3><p style="font-size:13px;color:var(--gray-mid);margin-bottom:16px;line-height:1.5;">Upload or paste a QR image for each payment method. When a buyer selects a method, their QR appears automatically.</p>'
+    + methods.map(m=>`
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--black);">${m}</div>
+      <div class="admin-field" style="margin-bottom:6px;">
+        <label>Paste image URL</label>
+        <div class="img-row">
+          <input type="url" id="qr_url_${m}" placeholder="https://..." oninput="previewImg('qr_url_${m}','qr_prev_${m}')">
+          <img class="img-preview" id="qr_prev_${m}">
+        </div>
+      </div>
+      <div class="admin-field" style="margin-bottom:8px;">
+        <label>Or upload photo</label>
+        <input type="file" accept="image/*" onchange="fileToUrl(this.id,'qr_url_${m}','qr_prev_${m}')" id="qr_file_${m}">
+      </div>
+      <button class="admin-btn" style="padding:8px 16px;font-size:13px;" onclick="saveQR('${m}')">Save QR</button>
+      <button class="mini-btn del" style="margin-left:6px;" onclick="removeQR('${m}')">Remove</button>
+    </div>`).join('')
+    + '</div>';
+  panel.appendChild(div);
+})();
+</script>
+
+<!-- APPEARANCE PREVIEW STYLE TAG (updated dynamically) -->
+<style id="appearanceStyle"></style>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// DATA
+// =====================
+// Data initialized empty — always loaded fresh from Sheet on page load
+let PRODUCTS = JSON.parse(localStorage.getItem('zrs_products')||'null') || [
+  {name:"28mm Elbow Copy 4th",price:2000,desc:"High-quality 28mm elbow copy. Compatible with most scooter builds.",note:"",img:"",stock:-1},
+  {name:"Aracer Mini X Lite ECU",price:12500,desc:"Aracer Mini X Lite programmable ECU. Plug-and-play setup for fuel-injected scooters.",note:"",img:"",stock:-1},
+  {name:"CVT Centerspring 1500",price:350,desc:"CVT center spring upgrade for smoother power delivery.",note:"",img:"",stock:-1},
+  {name:"JVT 66mm Long Sleeve Block",price:7800,desc:"JVT 66mm big bore long sleeve cylinder block. Popular upgrade for displacement builds.",note:"",img:"",stock:-1},
+  {name:"MTRT Clamp Bracket",price:1200,desc:"MTRT clamp bracket. Secure and adjustable fitment.",note:"",img:"",stock:-1},
+  {name:"MTRT Elbow (32mm)",price:3200,desc:"MTRT 32mm performance elbow. Improves airflow and throttle response.",note:"Price may vary — we'll confirm via DM",img:"",stock:-1},
+  {name:"MTRT Elbow (35mm)",price:3500,desc:"MTRT 35mm performance elbow for larger displacement setups.",note:"Price may vary — we'll confirm via DM",img:"",stock:-1},
+  {name:"MTRT Elbow (Nmax V1)",price:3000,desc:"MTRT elbow designed specifically for the Nmax V1 airbox.",note:"Price may vary — we'll confirm via DM",img:"",stock:-1},
+  {name:"RCB VD Premium Silver Shock",price:11900,desc:"RCB VD Premium Silver rear shock absorber. Adjustable preload with premium ride quality.",note:"",img:"",stock:-1},
+  {name:"Razer Atomic",price:12000,desc:"Razer Atomic performance upgrade. Built for aggressive scooter builds.",note:"",img:"",stock:-1},
+  {name:"SP 2 Black 300mm",price:5500,desc:"SP 2 Black rear shock, 300mm length. Sporty look and solid performance.",note:"",img:"",stock:-1},
+  {name:"SP 2 Black 340mm",price:5500,desc:"SP 2 Black rear shock, 340mm length. Lifted stance with improved ride comfort.",note:"",img:"",stock:-1},
+  {name:"TSMP S2.25 Black",price:6500,desc:"TSMP S2.25 performance shock in black. Reliable and great value.",note:"",img:"",stock:-1},
+  {name:"TSMP S2.5 Black/Blue",price:6800,desc:"TSMP S2.5 shock in Black/Blue colorway. Adjustable and track-tested.",note:"",img:"",stock:-1},
+  {name:"TSMP S2.75 Black/Blue",price:7800,desc:"TSMP S2.75 — top of the TSMP lineup. Black/Blue finish with superior damping.",note:"",img:"",stock:-1},
+];
+
+let PREORDERS = JSON.parse(localStorage.getItem('zrs_preorders')||'[]');
+let POSTS = JSON.parse(localStorage.getItem('zrs_posts')||'[]');
+let STORE_INFO = JSON.parse(localStorage.getItem('zrs_store_info')||'{}');
+
+function saveData(){
+  try {
+    localStorage.setItem('zrs_products', JSON.stringify(PRODUCTS));
+    localStorage.setItem('zrs_preorders', JSON.stringify(PREORDERS));
+    localStorage.setItem('zrs_posts', JSON.stringify(POSTS));
+    localStorage.setItem('zrs_store_info', JSON.stringify(STORE_INFO));
+  } catch(e){}
+  syncToSheet();
+}
+
+// =====================
+// NAV
+// =====================
+function showPage(id, clickedTab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(clickedTab) clickedTab.classList.add('active');
+  if(id==='announce') renderFeed();
+  if(id==='order') renderProductList();
+  if(id==='admin') renderAdminProducts();
+}
+
+// =====================
+// FORMAT
+// =====================
+function fp(n){return '₱'+Number(n).toLocaleString('en-PH');}
+
+// =====================
+// ANNOUNCEMENTS
+// =====================
+function renderPreorderGrid(){
+  const g = document.getElementById('preorderGrid');
+  if(!PREORDERS.length){
+    g.innerHTML=`<div class="empty-state"><div class="e-icon">📦</div><p>No pre-order items yet.<br>Check back soon!</p></div>`;
+    return;
+  }
+  g.innerHTML = PREORDERS.map((p,i)=>`
+    <div class="preorder-card">
+      ${p.img
+        ? `<img class="preorder-img" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">`
+        : `<div class="preorder-img-placeholder">📷</div>`}
+      <div class="preorder-body">
+        <div class="preorder-tag">Pre-order</div>
+        <div class="preorder-name">${p.name}</div>
+        <div class="preorder-desc">${p.desc||'Details coming soon.'}</div>
+        ${p.price>0?`<div class="preorder-price">${fp(p.price)}</div>`:`<div class="preorder-price">Price TBA</div>`}
+        ${p.eta?`<div class="preorder-price-note">ETA: ${p.eta}</div>`:''}
+        <button class="preorder-btn" onclick="openPoModal('${p.name.replace(/'/g,"\\'")}')">Reserve this item</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let currentPoItem = '';
+function openPoModal(name){
+  currentPoItem = name;
+  document.getElementById('poModalName').textContent = name;
+  document.getElementById('poResName').value='';
+  document.getElementById('poResPhone').value='';
+  document.getElementById('poResProfile').value='';
+  document.getElementById('poResNote').value='';
+  document.getElementById('poResErr').style.display='none';
+  document.getElementById('poModal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closePoModal(){
+  document.getElementById('poModal').style.display='none';
+  document.body.style.overflow='';
+}
+function submitPoReservation(){
+  const name = document.getElementById('poResName').value.trim();
+  const phone = document.getElementById('poResPhone').value.trim();
+  const err = document.getElementById('poResErr');
+  if(!name){err.textContent='Please enter your full name.';err.style.display='block';return;}
+  if(!phone){err.textContent='Please enter your contact number.';err.style.display='block';return;}
+  err.style.display='none';
+  sendToSheet({
+    type:'preorder',
+    item:currentPoItem,
+    name:name,
+    contact:phone,
+    profile:document.getElementById('poResProfile').value.trim(),
+    note:document.getElementById('poResNote').value.trim()
+  });
+  closePoModal();
+  document.getElementById('poSuccessModal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closePoSuccess(){
+  document.getElementById('poSuccessModal').style.display='none';
+  document.body.style.overflow='';
+}
+
+// =====================
+// ORDER FORM — CART
+// =====================
+let cart = {}; // {productIndex: qty}
+let selectedPayment = '';
+
+function stockStatus(p){
+  const s = p.stock;
+  if(s === undefined || s === null || s === -1) return 'available';
+  if(s === 0) return 'soldout';
+  if(s <= 2) return 'low';
+  return 'available';
+}
+
+function renderProductList(){
+  const list = document.getElementById('productList');
+  list.innerHTML = PRODUCTS.map((p,i)=>{
+    const status = stockStatus(p);
+    const soldOut = status === 'soldout';
+    const low = status === 'low';
+    const itemBorder = soldOut ? '#ddd' : (cart[i]>0 ? 'var(--green)' : 'var(--border)');
+    const itemOpacity = soldOut ? '0.55' : '1';
+    return `
+    <div class="product-item" data-index="${i}" style="border-color:${itemBorder};opacity:${itemOpacity};">
+      <div class="product-item-top" onclick="toggleDesc(${i})" style="cursor:pointer;">
+        ${p.img
+          ? `<img class="product-thumb" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">`
+          : `<div class="product-thumb-placeholder">📷</div>`}
+        <div class="product-info-col">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <div class="product-name">${p.name}</div>
+            ${soldOut ? `<span style="font-size:10px;font-weight:700;background:#FFEBEE;color:#B71C1C;padding:2px 7px;border-radius:20px;letter-spacing:0.04em;">SOLD OUT</span>` : ''}
+            ${low ? `<span style="font-size:10px;font-weight:700;background:#FFF8E1;color:#F57F17;padding:2px 7px;border-radius:20px;letter-spacing:0.04em;">LOW STOCK</span>` : ''}
+          </div>
+          ${p.note?`<div class="product-note-tag">${p.note}</div>`:''}
+          <div class="product-price-row">
+            <div class="product-price">${fp(p.price)}</div>
+          </div>
+        </div>
+      </div>
+      ${p.desc?`<div class="product-desc-row" id="desc-${i}">${p.desc}</div>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid #f5f5f5;background:#fafafa;">
+        ${soldOut
+          ? `<span style="font-size:12px;color:#B71C1C;font-weight:600;">Currently unavailable</span>`
+          : `<span style="font-size:12px;color:var(--gray-mid);">Tap name to see details</span>`}
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="cartChange(${i},-1)" ${soldOut?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);font-size:18px;color:var(--black);cursor:${soldOut?'not-allowed':'pointer'};display:flex;align-items:center;justify-content:center;opacity:${soldOut?'0.4':'1'};">−</button>
+          <span style="font-size:15px;font-weight:700;min-width:20px;text-align:center;" id="cartqty-${i}">0</span>
+          <button onclick="${soldOut?'':''  }cartChange(${i},1)" ${soldOut?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1.5px solid ${soldOut?'var(--border)':'var(--green)'};background:${soldOut?'var(--border)':'var(--green)'};color:#fff;font-size:18px;cursor:${soldOut?'not-allowed':'pointer'};display:flex;align-items:center;justify-content:center;opacity:${soldOut?'0.4':'1'};">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDesc(i){
+  const d = document.getElementById('desc-'+i);
+  if(d) d.style.display = d.style.display==='block'?'none':'block';
+}
+
+function cartChange(i, d){
+  if(stockStatus(PRODUCTS[i]) === 'soldout') return;
+  const current = cart[i] || 0;
+  const stock = PRODUCTS[i].stock;
+  const maxQty = (stock !== undefined && stock !== null && stock !== -1 && stock > 0) ? stock : 999;
+  const next = Math.min(maxQty, Math.max(0, current + d));
+  if(next === current && d > 0){ showToast('Maximum available stock reached!'); return; }
+  if(next === 0) delete cart[i]; else cart[i] = next;
+  const el = document.getElementById('cartqty-'+i);
+  if(el) el.textContent = next;
+  const item = document.querySelector(`.product-item[data-index="${i}"]`);
+  if(item) item.style.borderColor = next > 0 ? 'var(--green)' : 'var(--border)';
+  renderCart();
+  updateSummary();
+}
+
+function renderCart(){
+  const keys = Object.keys(cart);
+  const cartCard = document.getElementById('cartCard');
+  if(keys.length === 0){ cartCard.style.display='none'; return; }
+  cartCard.style.display='block';
+  const total = keys.reduce((s,i)=>s+PRODUCTS[i].price*cart[i],0);
+  document.getElementById('cartCount').textContent = keys.length + (keys.length===1?' item':' items');
+  document.getElementById('cartTotal').textContent = fp(total);
+  document.getElementById('cartList').innerHTML = keys.map(i=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;">
+      ${PRODUCTS[i].img?`<img src="${PRODUCTS[i].img}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`:''}
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;">${PRODUCTS[i].name}</div>
+        <div style="font-size:12px;color:var(--gray-mid);">${fp(PRODUCTS[i].price)} × ${cart[i]}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--green);white-space:nowrap;">${fp(PRODUCTS[i].price*cart[i])}</div>
+    </div>
+  `).join('');
+}
+
+function selectPayment(el, name){
+  document.querySelectorAll('.pay-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPayment = name;
+  document.getElementById('codNote').style.display = name==='COD'?'block':'none';
+  const infoBox = document.getElementById('paymentInfoBox');
+  if(name==='COD'){
+    infoBox.style.display='none';
+  } else if(name==='Cash on Pickup'){
+    infoBox.style.display='none';
+  } else {
+    infoBox.style.display='block';
+    document.getElementById('payInfoLabel').textContent = name + ' — Send payment to';
+    // Show account name/number only for GCash
+    const isGcash = name === 'GCash';
+    document.getElementById('payAccountName').style.display = isGcash ? 'block' : 'none';
+    document.getElementById('payAccountNum').style.display = isGcash ? 'block' : 'none';
+    const qr = (PAYMENT_QRS && PAYMENT_QRS[name]) || '';
+    const qrWrap = document.getElementById('payQrWrap');
+    const qrImg = document.getElementById('payQrImg');
+    if(qr){ qrImg.src=qr; qrWrap.style.display='block'; }
+    else { qrWrap.style.display='none'; }
+  }
+  updateSummary();
+}
+
+function updateSummary(){
+  const keys = Object.keys(cart);
+  const subtotal = keys.reduce((s,i)=>s+PRODUCTS[i].price*cart[i],0);
+  const discount = calcDiscount(subtotal);
+  const total = Math.max(0, subtotal - discount);
+  const ship = document.getElementById('shipping').value;
+  const itemLines = keys.length > 0
+    ? keys.map(i=>`<div class="summary-row"><span>${PRODUCTS[i].name} ×${cart[i]}</span><span>${fp(PRODUCTS[i].price*cart[i])}</span></div>`).join('')
+    : '<div class="summary-row"><span>Items</span><span>—</span></div>';
+  document.getElementById('sumItems').innerHTML = itemLines;
+  document.getElementById('sumShipping').textContent = ship || '—';
+  document.getElementById('sumPayment').textContent = selectedPayment || '—';
+  const discRow = document.getElementById('sumDiscountRow');
+  if(discount > 0){
+    discRow.style.display='flex';
+    document.getElementById('sumDiscount').textContent = '−'+fp(discount);
+  } else {
+    discRow.style.display='none';
+  }
+  document.getElementById('sumTotal').textContent = keys.length > 0 ? fp(total) : '—';
+}
+
+function showErr(msg){
+  const e=document.getElementById('errorMsg');
+  e.textContent=msg; e.style.display='block';
+  e.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function submitOrder(){
+  document.getElementById('errorMsg').style.display='none';
+  const fname=document.getElementById('fname').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const profilelink=document.getElementById('profilelink').value.trim();
+  const address=document.getElementById('address').value.trim();
+  const ship=document.getElementById('shipping').value;
+  const keys = Object.keys(cart);
+  if(keys.length===0){showErr('Please add at least one product to your cart.');return;}
+  if(!fname){showErr('Please enter your full name.');return;}
+  if(!phone){showErr('Please enter your contact number.');return;}
+  if(!address){showErr('Please enter your complete address.');return;}
+  if(!ship){showErr('Please select a shipping method.');return;}
+  if(!selectedPayment){showErr('Please choose a payment method.');return;}
+  const subtotal = keys.reduce((s,i)=>s+PRODUCTS[i].price*cart[i],0);
+  const discount = calcDiscount(subtotal);
+  const total = Math.max(0, subtotal - discount);
+  const voucherInfo = appliedVoucher ? ' | Voucher: '+appliedVoucher.code+' (-'+fp(discount)+')' : '';
+  const itemsSummary = keys.map(i=>`${PRODUCTS[i].name} x${cart[i]} (${fp(PRODUCTS[i].price*cart[i])})`).join(' | ') + voucherInfo;
+  // Track voucher usage
+  if(appliedVoucher){
+    const vi = VOUCHERS.findIndex(v=>v.code===appliedVoucher.code);
+    if(vi>=0){ VOUCHERS[vi].used++; saveVouchers(); }
+    appliedVoucher = null;
+    document.getElementById('voucherInput').value='';
+    document.getElementById('voucherMsg').style.display='none';
+  }
+  document.getElementById('mainForm').style.display='none';
+  document.getElementById('successDetail').innerHTML=
+    keys.map(i=>`<div class="sd-row"><span>${PRODUCTS[i].name} ×${cart[i]}</span><span>${fp(PRODUCTS[i].price*cart[i])}</span></div>`).join('') +
+    (discount>0?`<div class="sd-row" style="color:var(--green-dark);"><span>Discount</span><span>−${fp(discount)}</span></div>`:'') +
+    `<div class="sd-row" style="border-top:1px solid var(--green-mid);margin-top:6px;padding-top:8px;font-weight:700;"><span>Total</span><span style="color:var(--green);">${fp(total)}</span></div>
+    <div class="sd-row"><span>Shipping</span><span>${ship}</span></div>
+    <div class="sd-row"><span>Payment</span><span>${selectedPayment}</span></div>
+    <div class="sd-row"><span>Name</span><span>${fname}</span></div>
+    <div class="sd-row"><span>Contact</span><span>${phone}</span></div>
+    ${profilelink?`<div class="sd-row"><span>Profile</span><span style="word-break:break-all;">${profilelink}</span></div>`:''}`;
+  sendToSheet({
+    type:'order',
+    product:itemsSummary,
+    qty:keys.reduce((s,i)=>s+cart[i],0),
+    total:fp(total),
+    shipping:ship,
+    payment:selectedPayment,
+    name:fname,
+    contact:phone,
+    profile:profilelink,
+    address:address,
+    note:document.getElementById('note').value.trim()
+  });
+  document.getElementById('successScreen').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetForm(){
+  cart={}; selectedPayment=''; appliedVoucher=null;
+  document.getElementById('voucherInput').value='';
+  document.getElementById('voucherMsg').style.display='none';
+  document.querySelectorAll('.product-item').forEach(el=>el.style.borderColor='var(--border)');
+  document.querySelectorAll('.pay-option').forEach(el=>el.classList.remove('selected'));
+  ['fname','phone','profilelink','address','note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('shipping').value='';
+  document.getElementById('codNote').style.display='none';
+  document.getElementById('paymentInfoBox').style.display='none';
+  document.getElementById('cartCard').style.display='none';
+  updateSummary();
+  document.getElementById('successScreen').style.display='none';
+  document.getElementById('mainForm').style.display='block';
+  renderProductList();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('shipping').addEventListener('change', updateSummary);
+
+function onShippingChange(){
+  const v = document.getElementById('shipping').value;
+  document.getElementById('jtNote').style.display = v==='J&T Express'?'block':'none';
+  document.getElementById('lalamoveNote').style.display = v==='Lalamove/Grab'?'block':'none';
+  document.getElementById('meetupNote').style.display = v==='Pickup'?'block':'none';
+  updateSummary();
+}
+
+// =====================
+// PAYMENT QR CODES
+// =====================
+let PAYMENT_QRS = JSON.parse(localStorage.getItem('zrs_payment_qrs')||'{}');
+function savePaymentQRs(){
+  try { localStorage.setItem('zrs_payment_qrs', JSON.stringify(PAYMENT_QRS)); } catch(e){}
+  syncToSheet();
+}
+
+// =====================
+// VOUCHER SYSTEM
+// =====================
+let VOUCHERS = JSON.parse(localStorage.getItem('zrs_vouchers')||'[]');
+let appliedVoucher = null;
+
+function saveVouchers(){
+  try { localStorage.setItem('zrs_vouchers', JSON.stringify(VOUCHERS)); } catch(e){}
+  syncToSheet();
+}
+
+function applyVoucher(){
+  const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+  const msg = document.getElementById('voucherMsg');
+  if(!code){ showVoucherMsg('Enter a voucher code first.','error'); return; }
+  const v = VOUCHERS.find(v=>v.code===code);
+  if(!v){ showVoucherMsg('Invalid code. Please check and try again.','error'); appliedVoucher=null; updateSummary(); return; }
+  if(v.used >= v.limit){ showVoucherMsg('This code has already reached its usage limit.','error'); appliedVoucher=null; updateSummary(); return; }
+  appliedVoucher = v;
+  const desc = v.type==='percent' ? v.value+'% off' : '₱'+Number(v.value).toLocaleString()+' off';
+  showVoucherMsg('✓ Code applied: '+desc,'success');
+  updateSummary();
+}
+
+function showVoucherMsg(text, type){
+  const el = document.getElementById('voucherMsg');
+  el.textContent = text;
+  el.style.display='block';
+  el.style.background = type==='success'?'var(--green-light)':'#FFEBEE';
+  el.style.color = type==='success'?'var(--green-deep)':'#B71C1C';
+  el.style.border = type==='success'?'1px solid var(--green-mid)':'1px solid #EF9A9A';
+}
+
+function calcDiscount(subtotal){
+  if(!appliedVoucher) return 0;
+  if(appliedVoucher.type==='percent') return Math.round(subtotal * appliedVoucher.value / 100);
+  return Math.min(appliedVoucher.value, subtotal);
+}
+
+// ADMIN VOUCHER MANAGEMENT
+let editingVoucherIndex = -1;
+
+function renderVoucherAdmin(){
+  const list = document.getElementById('voucherAdminList');
+  if(!VOUCHERS.length){ list.innerHTML='<div style="font-size:13px;color:var(--gray-mid);padding:8px 0;">No vouchers yet.</div>'; return; }
+  list.innerHTML = VOUCHERS.map((v,i)=>`
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:var(--black);letter-spacing:0.04em;">${v.code}</div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;">${v.type==='percent'?v.value+'% off':'₱'+Number(v.value).toLocaleString()+' off'}</div>
+        <div style="font-size:11px;color:var(--gray-mid);margin-top:2px;">Used: ${v.used} / ${v.limit}</div>
+      </div>
+      <button class="mini-btn edit" onclick="editVoucher(${i})">Edit</button>
+      <button class="mini-btn del" onclick="deleteVoucher(${i})">Delete</button>
+    </div>
+  `).join('');
+}
+
+function saveVoucher(){
+  const code = document.getElementById('vcCode').value.trim().toUpperCase();
+  const type = document.getElementById('vcType').value;
+  const value = parseFloat(document.getElementById('vcValue').value);
+  const limit = parseInt(document.getElementById('vcLimit').value);
+  if(!code){ showToast('Enter a voucher code.'); return; }
+  if(!value||value<=0){ showToast('Enter a valid discount value.'); return; }
+  if(!limit||limit<=0){ showToast('Enter a valid usage limit.'); return; }
+  if(editingVoucherIndex>=0){
+    VOUCHERS[editingVoucherIndex] = {...VOUCHERS[editingVoucherIndex], code, type, value, limit};
+    showToast('Voucher updated!');
+    cancelVoucherEdit();
+  } else {
+    if(VOUCHERS.find(v=>v.code===code)){ showToast('Code already exists.'); return; }
+    VOUCHERS.push({code, type, value, limit, used:0});
+    showToast('Voucher created!');
+  }
+  saveVouchers();
+  renderVoucherAdmin();
+  clearVoucherForm();
+}
+
+function editVoucher(i){
+  editingVoucherIndex = i;
+  const v = VOUCHERS[i];
+  document.getElementById('vcCode').value = v.code;
+  document.getElementById('vcType').value = v.type;
+  document.getElementById('vcValue').value = v.value;
+  document.getElementById('vcLimit').value = v.limit;
+  document.getElementById('voucherFormTitle').textContent = 'Edit voucher';
+  document.getElementById('vcSaveBtn').textContent = 'Save changes';
+  document.getElementById('vcCancelBtn').style.display='inline-block';
+  document.getElementById('tabVouchers').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelVoucherEdit(){
+  editingVoucherIndex=-1;
+  clearVoucherForm();
+  document.getElementById('voucherFormTitle').textContent = 'Create voucher';
+  document.getElementById('vcSaveBtn').textContent = 'Create voucher';
+  document.getElementById('vcCancelBtn').style.display='none';
+}
+
+function clearVoucherForm(){
+  ['vcCode','vcValue','vcLimit'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('vcType').value='percent';
+}
+
+function deleteVoucher(i){
+  if(!confirm('Delete voucher "'+VOUCHERS[i].code+'"?')) return;
+  VOUCHERS.splice(i,1);
+  saveVouchers();
+  renderVoucherAdmin();
+  showToast('Voucher deleted.');
+}
+
+// =====================
+// ADMIN AUTH
+// =====================
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzzgROE2xbSKBsDPxvPYPl7mT3sU6oysHJnaWZ6ynoSsz05z9Tc6XDgafejHL1StNOL/exec';
+
+async function sendToSheet(data){
+  try{
+    await fetch(SHEET_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
+  }catch(e){
+    console.error('Sheet error:',e);
+  }
+}
+
+const ADMIN_PW = 'pauze360';
+let adminAuthed = false;
+
+function adminLogin(){
+  const pw = document.getElementById('adminPwInput').value;
+  if(pw === ADMIN_PW){
+    adminAuthed = true;
+    document.getElementById('adminLogin').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    renderAdminProducts();
+    renderPreorderAdmin();
+  } else {
+    document.getElementById('adminLoginErr').style.display='block';
+  }
+}
+
+function adminLogout(){
+  adminAuthed=false;
+  document.getElementById('adminLogin').style.display='block';
+  document.getElementById('adminPanel').style.display='none';
+  document.getElementById('adminPwInput').value='';
+  document.getElementById('adminLoginErr').style.display='none';
+}
+
+// =====================
+// ADMIN TABS
+// =====================
+function adminTab(btn, tabId){
+  document.querySelectorAll('.tab-btns .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['tabProducts','tabPreorder','tabOrders','tabVouchers','tabAppearance','tabPaymentQR','tabPosts','tabStoreInfo'].forEach(id=>{
+    document.getElementById(id).style.display = id===tabId?'block':'none';
+  });
+}
+
+// =====================
+// ORDERS VIEWER
+// =====================
+const SHEET_READ_URL = 'https://script.google.com/macros/s/AKfycbzzgROE2xbSKBsDPxvPYPl7mT3sU6oysHJnaWZ6ynoSsz05z9Tc6XDgafejHL1StNOL/exec';
+let currentOrdersView = 'orders';
+let completedOrders = null;
+
+function saveCompleted(){
+  try { localStorage.setItem('zrs_completed', JSON.stringify(completedOrders)); } catch(e){}
+  syncToSheet();
+}
+
+function switchOrdersView(btn, view){
+  document.querySelectorAll('#tabOrders .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentOrdersView = view;
+  document.getElementById('ordersList').style.display = view==='orders'?'block':'none';
+  document.getElementById('preordersList').style.display = view==='preorders'?'block':'none';
+  document.getElementById('completedList').style.display = view==='completed'?'block':'none';
+}
+
+async function loadOrders(){
+  const loading = document.getElementById('ordersLoading');
+  const ordersList = document.getElementById('ordersList');
+  const preordersList = document.getElementById('preordersList');
+  const completedList = document.getElementById('completedList');
+  loading.style.display='block';
+  ordersList.style.display='none';
+  preordersList.style.display='none';
+  completedList.style.display='none';
+
+  try {
+    const res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(SHEET_READ_URL+'?action=read')).then(r=>r.json()).then(d=>({json:()=>JSON.parse(d.contents)}));
+    const data = await res.json();
+    loading.style.display='none';
+
+    const allOrders = data.orders && data.orders.length>1 ? data.orders.slice(1).reverse() : [];
+    const visible = allOrders.filter(r=>!removedOrders.includes(r[0]+r[6]));
+    const pending = visible.filter(r=>!completedOrders.includes(r[0]+r[6]));
+    const completed = visible.filter(r=>completedOrders.includes(r[0]+r[6]));
+
+    ordersList.innerHTML = pending.length
+      ? pending.map((r,i)=>orderCard(r,false,false,i)).join('')
+      : '<div style="text-align:center;padding:24px;color:var(--gray-mid);font-size:14px;">No pending orders.</div>';
+
+    completedList.innerHTML = completed.length
+      ? completed.map((r,i)=>orderCard(r,false,true,i+10000)).join('')
+      : '<div style="text-align:center;padding:24px;color:var(--gray-mid);font-size:14px;">No completed orders yet.</div>';
+
+    if(!data.preorders || data.preorders.length<=1){
+      preordersList.innerHTML='<div style="text-align:center;padding:24px;color:var(--gray-mid);font-size:14px;">No pre-order reservations yet.</div>';
+    } else {
+      preordersList.innerHTML = data.preorders.slice(1).reverse().map(r=>orderCard(r,true,false)).join('');
+    }
+
+    ordersList.style.display = currentOrdersView==='orders'?'block':'none';
+    preordersList.style.display = currentOrdersView==='preorders'?'block':'none';
+    completedList.style.display = currentOrdersView==='completed'?'block':'none';
+
+  } catch(e) {
+    loading.innerHTML='<div style="color:#B71C1C;font-size:13px;">Failed to load. Check your connection and try again.</div>';
+  }
+}
+
+function markComplete(ts, name){
+  const key = ts+name;
+  if(!completedOrders.includes(key)) completedOrders.push(key);
+  saveCompleted();
+  loadOrders();
+  showToast('Order marked as completed!');
+}
+
+function unmarkComplete(ts, name){
+  const key = ts+name;
+  completedOrders = completedOrders.filter(k=>k!==key);
+  saveCompleted();
+  loadOrders();
+  showToast('Order moved back to pending.');
+}
+
+let removedOrders = null;
+function saveRemoved(){
+  try { localStorage.setItem('zrs_removed', JSON.stringify(removedOrders)); } catch(e){}
+  syncToSheet();
+}
+
+function removeOrder(ts, name){
+  const key = ts+name;
+  if(!removedOrders.includes(key)) removedOrders.push(key);
+  // also remove from completed if it was there
+  completedOrders = completedOrders.filter(k=>k!==key);
+  saveRemoved();
+  saveCompleted();
+  loadOrders();
+  showToast('Order removed.');
+}
+
+let _orderMap = {};
+function orderCard(r, isPreorder, isCompleted, idx){
+  const safeStr = s => (s||'—').toString().replace(/`/g,"'");
+  if(isPreorder){
+    const [ts,item,name,contact,profile,note] = r;
+    return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <div style="font-size:14px;font-weight:700;">${safeStr(name)}</div>
+        <div style="font-size:11px;color:var(--gray-mid);white-space:nowrap;">${safeStr(ts)}</div>
+      </div>
+      <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:6px;">${safeStr(item)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
+        <div style="font-size:12px;color:var(--gray);">📞 ${safeStr(contact)}</div>
+        ${profile?`<div style="font-size:12px;color:var(--gray);">🔗 <a href="${profile}" target="_blank" style="color:var(--green);">Profile</a></div>`:'<div></div>'}
+        ${note?`<div style="font-size:12px;color:var(--gray);grid-column:1/-1;">📝 ${safeStr(note)}</div>`:''}
+      </div>
+    </div>`;
+  } else {
+    const [ts,product,qty,total,shipping,payment,name,contact,profile,address,note] = r;
+    const html = `<div style="border:1.5px solid ${isCompleted?'#fdd85d':'var(--border)'};border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;background:${isCompleted?'var(--green-light)':'var(--white)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;">${safeStr(name)}</div>
+          ${isCompleted?'<div style="font-size:11px;color:var(--green-dark);font-weight:600;margin-top:2px;">✓ Completed</div>':''}
+        </div>
+        <div style="font-size:11px;color:var(--gray-mid);white-space:nowrap;">${safeStr(ts)}</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:2px;">${safeStr(total)}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">${safeStr(product)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--gray);">📞 ${safeStr(contact)}</div>
+        <div style="font-size:12px;color:var(--gray);">🚚 ${safeStr(shipping)}</div>
+        <div style="font-size:12px;color:var(--gray);">💳 ${safeStr(payment)}</div>
+        ${profile?`<div style="font-size:12px;color:var(--gray);">🔗 <a href="${profile}" target="_blank" style="color:var(--green);">Profile</a></div>`:'<div></div>'}
+        <div style="font-size:12px;color:var(--gray);grid-column:1/-1;">📍 ${safeStr(address)}</div>
+        ${note?`<div style="font-size:12px;color:var(--gray);grid-column:1/-1;">📝 ${safeStr(note)}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">
+        <button class="mini-btn order-action-btn" data-idx="${idx}" data-done="${isCompleted?'1':'0'}" style="${isCompleted?'background:var(--gray-light);color:var(--gray);':'background:var(--green-light);color:var(--green-dark);'}font-size:12px;">${isCompleted?'↩ Move to pending':'✓ Mark as done'}</button>
+        <button class="mini-btn order-remove-btn" data-idx="${idx}" style="background:#FFEBEE;color:#B71C1C;font-size:12px;">✕ Remove</button>
+      </div>
+    </div>`;
+    _orderMap[idx] = {ts: String(ts||''), name: String(name||'')};
+    return html;
+  }
+}
+
+document.addEventListener('click', function(e){
+  const actionBtn = e.target.closest('.order-action-btn');
+  if(actionBtn){
+    const idx = actionBtn.dataset.idx;
+    const o = _orderMap[idx];
+    if(!o) return;
+    const done = actionBtn.dataset.done === '1';
+    if(done){ unmarkComplete(o.ts, o.name); } else { markComplete(o.ts, o.name); }
+    return;
+  }
+  const removeBtn = e.target.closest('.order-remove-btn');
+  if(removeBtn){
+    const idx = removeBtn.dataset.idx;
+    const o = _orderMap[idx];
+    if(!o) return;
+    if(confirm('Remove this order? It stays in your Google Sheet.')) {
+      removeOrder(o.ts, o.name);
+    }
+  }
+});
+
+// =====================
+// ADMIN: PRODUCTS
+// =====================
+function renderAdminProducts(){
+  const sel = document.getElementById('editProductSelect');
+  sel.innerHTML = '<option value="">— Select product to edit —</option>' +
+    PRODUCTS.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+
+  const list = document.getElementById('productAdminList');
+  list.innerHTML = PRODUCTS.map((p,i)=>`
+    <div class="product-admin-item">
+      ${p.img
+        ? `<img class="product-admin-thumb" src="${p.img}" onerror="this.style.background='#eee'">`
+        : `<div class="product-admin-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:20px;">📷</div>`}
+      <div class="product-admin-info">
+        <div class="product-admin-name">${p.name}</div>
+        <div class="product-admin-price">${fp(p.price)}</div>
+        <div style="font-size:11px;margin-top:2px;${p.stock===0?'color:#B71C1C;font-weight:700;':p.stock>0&&p.stock<=2?'color:#F57F17;font-weight:700;':'color:var(--gray-mid);'}">
+          ${p.stock===undefined||p.stock===-1?'Stock: not set':p.stock===0?'SOLD OUT':p.stock<=2?'LOW STOCK — '+p.stock+' left':'In stock: '+p.stock}
+        </div>
+      </div>
+      <button class="mini-btn edit" onclick="quickEditProduct(${i})">Edit</button>
+    </div>
+  `).join('');
+}
+
+function loadProductEdit(){
+  const i = parseInt(document.getElementById('editProductSelect').value);
+  if(isNaN(i)){document.getElementById('productEditFields').style.display='none';return;}
+  const p = PRODUCTS[i];
+  document.getElementById('editPName').value = p.name;
+  document.getElementById('editPPrice').value = p.price;
+  document.getElementById('editPDesc').value = p.desc||'';
+  document.getElementById('editPNote').value = p.note||'';
+  document.getElementById('editPImgUrl').value = p.img||'';
+  document.getElementById('editPStock').value = p.stock !== undefined ? p.stock : '';
+  const prev = document.getElementById('editPImgPreview');
+  if(p.img){prev.src=p.img;prev.style.display='block';}else{prev.style.display='none';}
+  document.getElementById('productEditFields').style.display='block';
+}
+
+function quickEditProduct(i){
+  document.getElementById('editProductSelect').value = i;
+  loadProductEdit();
+  document.getElementById('tabProducts').scrollIntoView({behavior:'smooth'});
+}
+
+function saveProductEdit(){
+  const i = parseInt(document.getElementById('editProductSelect').value);
+  if(isNaN(i)){showToast('Select a product first.');return;}
+  PRODUCTS[i].name = document.getElementById('editPName').value.trim()||PRODUCTS[i].name;
+  PRODUCTS[i].price = parseInt(document.getElementById('editPPrice').value)||PRODUCTS[i].price;
+  PRODUCTS[i].desc = document.getElementById('editPDesc').value.trim();
+  PRODUCTS[i].note = document.getElementById('editPNote').value.trim();
+  PRODUCTS[i].img = document.getElementById('editPImgUrl').value.trim();
+  const stockVal = document.getElementById('editPStock').value;
+  PRODUCTS[i].stock = stockVal === '' ? undefined : parseInt(stockVal);
+  saveData();
+  renderAdminProducts();
+  renderProductList();
+  showToast('Product updated!');
+}
+
+// =====================
+// ADMIN: PRE-ORDERS
+// =====================
+let editingPreorderIndex = -1;
+
+function renderPreorderAdmin(){
+  const list = document.getElementById('preorderAdminList');
+  if(!PREORDERS.length){
+    list.innerHTML='<div style="font-size:13px;color:var(--gray-mid);padding:8px 0;">No pre-order items yet.</div>';
+    return;
+  }
+  list.innerHTML = PREORDERS.map((p,i)=>`
+    <div class="preorder-admin-item">
+      ${p.img
+        ? `<img class="preorder-admin-thumb" src="${p.img}" onerror="this.style.background='#eee'">`
+        : `<div class="preorder-admin-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:20px;">📷</div>`}
+      <div class="preorder-admin-info">
+        <div class="preorder-admin-name">${p.name}</div>
+        <div class="preorder-admin-price">${p.price>0?fp(p.price):'Price TBA'}</div>
+        ${p.eta?`<div style="font-size:11px;color:var(--gray-mid);">ETA: ${p.eta}</div>`:''}
+        <div class="preorder-admin-actions">
+          <button class="mini-btn edit" onclick="editPreorder(${i})">Edit</button>
+          <button class="mini-btn del" onclick="deletePreorder(${i})">Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function savePreorder(){
+  const name = document.getElementById('poName').value.trim();
+  if(!name){showToast('Please enter an item name.');return;}
+  const item = {
+    name,
+    price: parseInt(document.getElementById('poPrice').value)||0,
+    desc: document.getElementById('poDesc').value.trim(),
+    img: document.getElementById('poImgUrl').value.trim(),
+    eta: document.getElementById('poEta').value.trim(),
+  };
+  if(editingPreorderIndex>=0){
+    PREORDERS[editingPreorderIndex] = item;
+    showToast('Pre-order item updated!');
+    cancelPreorderEdit();
+  } else {
+    PREORDERS.push(item);
+    showToast('Pre-order item added!');
+  }
+  saveData();
+  renderPreorderAdmin();
+  clearPreorderForm();
+}
+
+function editPreorder(i){
+  editingPreorderIndex = i;
+  const p = PREORDERS[i];
+  document.getElementById('poName').value = p.name;
+  document.getElementById('poPrice').value = p.price||0;
+  document.getElementById('poDesc').value = p.desc||'';
+  document.getElementById('poImgUrl').value = p.img||'';
+  document.getElementById('poEta').value = p.eta||'';
+  const prev = document.getElementById('poImgPreview');
+  if(p.img){prev.src=p.img;prev.style.display='block';}else{prev.style.display='none';}
+  document.getElementById('preorderFormTitle').textContent = 'Edit pre-order item';
+  document.getElementById('poSaveBtn').textContent = 'Save changes';
+  document.getElementById('poCancelBtn').style.display='inline-block';
+  document.getElementById('tabPreorder').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelPreorderEdit(){
+  editingPreorderIndex = -1;
+  clearPreorderForm();
+  document.getElementById('preorderFormTitle').textContent = 'Add pre-order item';
+  document.getElementById('poSaveBtn').textContent = 'Add item';
+  document.getElementById('poCancelBtn').style.display='none';
+}
+
+function clearPreorderForm(){
+  ['poName','poPrice','poDesc','poImgUrl','poEta'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('poImgPreview').style.display='none';
+  const f = document.getElementById('poImgFile');
+  if(f) f.value='';
+}
+
+function deletePreorder(i){
+  if(!confirm(`Remove "${PREORDERS[i].name}" from pre-orders?`)) return;
+  PREORDERS.splice(i,1);
+  saveData();
+  renderPreorderAdmin();
+  renderPreorderGrid();
+  showToast('Item removed.');
+}
+
+// =====================
+// IMAGE HELPERS
+// =====================
+function convertDriveUrl(url){
+  // Google Drive
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(m1) return 'https://drive.google.com/uc?export=view&id=' + m1[1];
+  const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if(m2) return 'https://drive.google.com/uc?export=view&id=' + m2[1];
+  const m3 = url.match(/drive\.google\.com\/uc\?id=([a-zA-Z0-9_-]+)/);
+  if(m3) return 'https://drive.google.com/uc?export=view&id=' + m3[1];
+  // Imgur — convert page link to direct image link
+  const m4 = url.match(/imgur\.com\/([a-zA-Z0-9]+)$/);
+  if(m4) return 'https://i.imgur.com/' + m4[1] + '.jpg';
+  // Imgur gallery
+  const m5 = url.match(/imgur\.com\/a\/([a-zA-Z0-9]+)/);
+  if(m5) return 'https://i.imgur.com/' + m5[1] + '.jpg';
+  return url;
+}
+
+function previewImg(inputId, previewId){
+  const raw = document.getElementById(inputId).value.trim();
+  const url = convertDriveUrl(raw);
+  // Update the input with converted URL so it saves correctly
+  if(url !== raw) document.getElementById(inputId).value = url;
+  const prev = document.getElementById(previewId);
+  if(url){prev.src=url;prev.style.display='block';}else{prev.style.display='none';}
+}
+
+function fileToUrl(fileInputId, urlInputId, previewId){
+  const file = document.getElementById(fileInputId).files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    document.getElementById(urlInputId).value = e.target.result;
+    const prev = document.getElementById(previewId);
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// =====================
+// TOAST
+// =====================
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// =====================
+// =====================
+// APPEARANCE
+// =====================
+let APPEARANCE = JSON.parse(localStorage.getItem('zrs_appearance')||'null') || {
+  shopName:'ZRS Performance',
+  tagline:'Incoming Items',
+  accent:'#fbb800',
+  header:'#111111',
+  bg:'#efefef',
+  bgImg:'',
+  bgStyle:'cover',
+  btnStyle:'rounded'
+};
+
+function saveAppearanceData(){
+  try { localStorage.setItem('zrs_appearance', JSON.stringify(APPEARANCE)); } catch(e){}
+}
+
+function applyAppearance(ap){
+  const r = ap.accent;
+  const rDark = shadeColor(r, -20);
+  const rDeep = shadeColor(r, -40);
+  const rLight = hexToRgba(r, 0.12);
+  const rMid = hexToRgba(r, 0.45);
+  const btnRadius = ap.btnStyle==='pill'?'50px':ap.btnStyle==='sharp'?'4px':'14px';
+  const bgImg = ap.bgImg ? `background-image:url('${ap.bgImg}');background-size:${ap.bgStyle==='repeat'?'auto':ap.bgStyle==='center'?'auto':'cover'};background-repeat:${ap.bgStyle==='repeat'?'repeat':'no-repeat'};background-position:center;background-attachment:fixed;` : '';
+  document.getElementById('appearanceStyle').innerHTML = `
+    :root{--green:${r};--green-dark:${rDark};--green-deep:${rDeep};--green-light:${rLight};--green-mid:${rMid};}
+    body{background:${ap.bg}!important;${bgImg}}
+    .nav{background:${ap.header}!important;}
+    .header{background:${ap.header}!important;}
+    div[style*="background:var(--black)"]{background:${ap.header}!important;}
+    .submit-btn,.admin-btn,.preorder-btn{border-radius:${btnRadius}!important;}
+  `;
+  // Update hero text
+  const heroTitle = document.querySelector('.hero-title');
+  if(heroTitle) heroTitle.textContent = ap.shopName;
+  const heroTagline = document.querySelector('.hero-tagline');
+  if(heroTagline) heroTagline.textContent = ap.tagline;
+  // Update logo
+  document.querySelectorAll('.logo').forEach(el=>{ el.innerHTML = ap.shopName.replace(/(\w+)(\W*)$/, '$1<span style="color:var(--green)">.</span>'); });
+}
+
+function shadeColor(hex, pct){
+  const n = parseInt(hex.replace('#',''),16);
+  const r = Math.min(255,Math.max(0,((n>>16)&0xff)+Math.round(2.55*pct)));
+  const g = Math.min(255,Math.max(0,((n>>8)&0xff)+Math.round(2.55*pct)));
+  const b = Math.min(255,Math.max(0,(n&0xff)+Math.round(2.55*pct)));
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function hexToRgba(hex, alpha){
+  const n = parseInt(hex.replace('#',''),16);
+  return `rgba(${(n>>16)&0xff},${(n>>8)&0xff},${n&0xff},${alpha})`;
+}
+
+function loadAppearance(){
+  document.getElementById('apShopName').value = APPEARANCE.shopName||'';
+  document.getElementById('apTagline').value = APPEARANCE.tagline||'';
+  document.getElementById('apAccent').value = APPEARANCE.accent||'#fbb800';
+  document.getElementById('apAccentHex').value = APPEARANCE.accent||'#fbb800';
+  document.getElementById('apHeader').value = APPEARANCE.header||'#111111';
+  document.getElementById('apHeaderHex').value = APPEARANCE.header||'#111111';
+  document.getElementById('apBg').value = APPEARANCE.bg||'#efefef';
+  document.getElementById('apBgHex').value = APPEARANCE.bg||'#efefef';
+  document.getElementById('apBgImgUrl').value = APPEARANCE.bgImg||'';
+  document.getElementById('apBgStyle').value = APPEARANCE.bgStyle||'cover';
+  if(APPEARANCE.bgImg){ const p=document.getElementById('apBgImgPreview'); p.src=APPEARANCE.bgImg; p.style.display='block'; }
+  selectBtnStyle(APPEARANCE.btnStyle||'rounded', true);
+}
+
+function syncColor(hexInputId, colorPickerId){
+  const val = document.getElementById(hexInputId).value;
+  if(/^#[0-9A-Fa-f]{6}$/.test(val)) document.getElementById(colorPickerId).value = val;
+}
+
+document.addEventListener('input', function(e){
+  if(['apAccent','apHeader','apBg'].includes(e.target.id)){
+    const hexId = e.target.id+'Hex';
+    if(document.getElementById(hexId)) document.getElementById(hexId).value = e.target.value;
+  }
+});
+
+function selectBtnStyle(style, silent){
+  APPEARANCE.btnStyle = style;
+  ['rounded','sharp','pill'].forEach(s=>{
+    const el = document.getElementById('bs'+s.charAt(0).toUpperCase()+s.slice(1));
+    if(!el) return;
+    if(s===style){ el.style.borderColor='var(--green)'; el.style.background='var(--green)'; el.style.color='#fff'; }
+    else { el.style.borderColor='var(--border)'; el.style.background='var(--white)'; el.style.color='var(--black)'; }
+  });
+  if(!silent) previewAppearance();
+}
+
+function clearBgImage(){
+  document.getElementById('apBgImgUrl').value='';
+  document.getElementById('apBgImgPreview').style.display='none';
+  APPEARANCE.bgImg='';
+  previewAppearance();
+  showToast('Background image removed.');
+}
+
+function previewAppearance(){
+  const ap = {
+    shopName: document.getElementById('apShopName').value||APPEARANCE.shopName,
+    tagline: document.getElementById('apTagline').value||APPEARANCE.tagline,
+    accent: document.getElementById('apAccentHex').value||document.getElementById('apAccent').value,
+    header: document.getElementById('apHeaderHex').value||document.getElementById('apHeader').value,
+    bg: document.getElementById('apBgHex').value||document.getElementById('apBg').value,
+    bgImg: document.getElementById('apBgImgUrl').value,
+    bgStyle: document.getElementById('apBgStyle').value,
+    btnStyle: APPEARANCE.btnStyle||'rounded'
+  };
+  applyAppearance(ap);
+  showToast('Previewing changes...');
+}
+
+async function saveAppearance(){
+  APPEARANCE = {
+    shopName: document.getElementById('apShopName').value||APPEARANCE.shopName,
+    tagline: document.getElementById('apTagline').value||APPEARANCE.tagline,
+    accent: document.getElementById('apAccentHex').value||document.getElementById('apAccent').value,
+    header: document.getElementById('apHeaderHex').value||document.getElementById('apHeader').value,
+    bg: document.getElementById('apBgHex').value||document.getElementById('apBg').value,
+    bgImg: document.getElementById('apBgImgUrl').value,
+    bgStyle: document.getElementById('apBgStyle').value,
+    btnStyle: APPEARANCE.btnStyle||'rounded'
+  };
+  saveAppearanceData();
+  applyAppearance(APPEARANCE);
+  syncToSheet();
+  showToast('Appearance saved to all devices!');
+}
+
+// =====================
+// PAYMENT QR ADMIN
+// =====================
+function renderPaymentQRAdmin(){
+  const methods = ['GCash','Maya','Maribank','Chinabank'];
+  methods.forEach(m=>{
+    const urlEl = document.getElementById('qr_url_'+m);
+    const prevEl = document.getElementById('qr_prev_'+m);
+    if(!urlEl) return;
+    const saved = PAYMENT_QRS[m]||'';
+    urlEl.value = saved;
+    if(saved){ prevEl.src=saved; prevEl.style.display='block'; }
+    else { prevEl.style.display='none'; }
+  });
+}
+
+function saveQR(method){
+  const url = document.getElementById('qr_url_'+method).value.trim();
+  if(!url){ showToast('Paste or upload a QR image first.'); return; }
+  PAYMENT_QRS[method] = url;
+  savePaymentQRs();
+  showToast(method+' QR saved!');
+}
+
+function removeQR(method){
+  delete PAYMENT_QRS[method];
+  savePaymentQRs();
+  const urlEl = document.getElementById('qr_url_'+method);
+  const prevEl = document.getElementById('qr_prev_'+method);
+  if(urlEl) urlEl.value='';
+  if(prevEl){ prevEl.src=''; prevEl.style.display='none'; }
+  showToast(method+' QR removed.');
+}
+
+// =====================
+// FEED / ANNOUNCEMENTS
+// =====================
+let currentFeedFilter = 'all';
+
+function filterFeed(btn, type){
+  document.querySelectorAll('#page-announce .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFeedFilter = type;
+  renderFeed();
+}
+
+// Gallery lightbox
+let galleryItems = [];
+function openGallery(idx){
+  galleryItems = POSTS.filter(p=>p.type==='gallery');
+  const p = galleryItems[idx];
+  if(!p) return;
+  const modal = document.createElement('div');
+  modal.id = 'galleryModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="max-width:480px;width:100%;position:relative;">
+      <button onclick="document.getElementById('galleryModal').remove()" style="position:absolute;top:-36px;right:0;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;">×</button>
+      <img src="${p.img||''}" style="width:100%;border-radius:var(--radius);display:block;">
+      ${p.title||p.desc ? `<div style="padding:12px 4px 0;">
+        ${p.title?`<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">${p.title}</div>`:''}
+        ${p.desc?`<div style="font-size:13px;color:#aaa;line-height:1.5;">${p.desc}</div>`:''}
+      </div>`:''}
+    </div>`;
+  modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+function renderFeed(){
+  const allPosts = [
+    ...POSTS.map(p=>({...p, _src:'post'})),
+    ...PREORDERS.map(p=>({type:'preorder', title:p.name, desc:p.desc, img:p.img, price:p.price, eta:p.eta, _src:'preorder', _orig:p}))
+  ].reverse();
+
+  const filtered = currentFeedFilter==='all' ? allPosts : allPosts.filter(p=>p.type===currentFeedFilter);
+  const grid = document.getElementById('feedGrid');
+
+  if(!filtered.length){
+    grid.style.cssText = 'max-width:620px;margin:0 auto;padding:12px 12px 20px;';
+    grid.innerHTML = `<div class="empty-state"><div class="e-icon">${currentFeedFilter==='gallery'?'📸':'📦'}</div><p>Nothing here yet.<br>Check back soon!</p></div>`;
+    return;
+  }
+
+  // Split gallery from other posts
+  const galleryPosts = filtered.filter(p=>p.type==='gallery');
+  const otherPosts = filtered.filter(p=>p.type!=='gallery');
+  const galleryIndices = POSTS.filter(p=>p.type==='gallery');
+
+  let html = '';
+
+  // Non-gallery posts as cards
+  if(otherPosts.length){
+    grid.style.cssText = '';
+    html += `<div class="preorder-grid">` + otherPosts.map(p=>{
+      const tagColor = p.type==='announcement' ? '#0891B2' : 'var(--green-dark)';
+      const tagBg = p.type==='announcement' ? '#E0F2FE' : 'var(--green-light)';
+      const tagLabel = p.type==='announcement' ? '📢 Update' : '🛵 Pre-order';
+      const btnHtml = p.type==='preorder'
+        ? `<button class="preorder-btn" onclick="openPoModal('${(p.title||'').replace(/'/g,"\'")}')">Reserve this item</button>`
+        : '';
+      return `<div class="preorder-card">
+        ${p.img ? `<img class="preorder-img" src="${p.img}" alt="${p.title||''}" onerror="this.style.display='none'">` : ''}
+        <div class="preorder-body">
+          <div style="display:inline-block;background:${tagBg};color:${tagColor};font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px;margin-bottom:7px;">${tagLabel}</div>
+          <div class="preorder-name">${p.title||''}</div>
+          <div class="preorder-desc">${p.desc||''}</div>
+          ${p.price>0?`<div class="preorder-price">₱${Number(p.price).toLocaleString()}</div>`:''}
+          ${p.eta?`<div class="preorder-price-note">ETA: ${p.eta}</div>`:''}
+          ${btnHtml}
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  // Gallery posts as square grid
+  if(galleryPosts.length){
+    html += `<div style="max-width:620px;margin:0 auto;padding:${otherPosts.length?'4px':'12px'} 0 0;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-mid);padding:0 12px 8px;">📸 Customer Gallery</div>
+      <div class="gallery-grid">` +
+      galleryPosts.map((p,i)=>{
+        const gIdx = galleryIndices.findIndex(g=>g.title===p.title&&g.img===p.img);
+        return `<div class="gallery-item" onclick="openGallery(${gIdx>=0?gIdx:i})">
+          ${p.img?`<img src="${p.img}" alt="${p.title||''}" onerror="this.parentElement.style.background='var(--border)'">`:
+          '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;">📷</div>'}
+        </div>`;
+      }).join('') +
+      '</div></div>';
+  }
+
+  grid.style.cssText = '';
+  grid.innerHTML = html;
+}
+
+// =====================
+// POSTS ADMIN
+// =====================
+let editingPostIndex = -1;
+
+document.addEventListener('change', function(e){
+  if(e.target.id === 'postType'){
+    const isPreorder = e.target.value === 'preorder';
+    document.getElementById('postPriceWrap').style.display = isPreorder?'block':'none';
+    document.getElementById('postEtaWrap').style.display = isPreorder?'block':'none';
+  }
+});
+
+function renderPostsAdmin(){
+  const list = document.getElementById('postsAdminList');
+  if(!list) return;
+  if(!POSTS.length){ list.innerHTML='<div style="font-size:13px;color:var(--gray-mid);padding:8px 0;">No posts yet.</div>'; return; }
+  list.innerHTML = POSTS.map((p,i)=>`
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+      ${p.img?`<img src="${p.img}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;border-radius:6px;background:var(--gray-light);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">📷</div>'}
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;">${p.title||'—'}</div>
+        <div style="font-size:11px;color:var(--gray-mid);text-transform:uppercase;letter-spacing:0.04em;">${p.type||''}</div>
+      </div>
+      <button class="mini-btn edit" onclick="editPost(${i})">Edit</button>
+      <button class="mini-btn del" onclick="deletePost(${i})">Delete</button>
+    </div>
+  `).join('');
+}
+
+function savePost(){
+  const title = document.getElementById('postTitle').value.trim();
+  if(!title){ showToast('Enter a title.'); return; }
+  const item = {
+    type: document.getElementById('postType').value,
+    title,
+    desc: document.getElementById('postDesc').value.trim(),
+    img: document.getElementById('postImgUrl').value.trim(),
+    price: parseInt(document.getElementById('postPrice').value)||0,
+    eta: document.getElementById('postEta').value.trim(),
+    ts: new Date().toISOString()
+  };
+  if(editingPostIndex>=0){
+    POSTS[editingPostIndex] = item;
+    showToast('Post updated!');
+    cancelPostEdit();
+  } else {
+    POSTS.push(item);
+    showToast('Post added!');
+  }
+  saveData();
+  renderPostsAdmin();
+  renderFeed();
+  clearPostForm();
+}
+
+function editPost(i){
+  editingPostIndex = i;
+  const p = POSTS[i];
+  document.getElementById('postType').value = p.type||'preorder';
+  document.getElementById('postTitle').value = p.title||'';
+  document.getElementById('postDesc').value = p.desc||'';
+  document.getElementById('postImgUrl').value = p.img||'';
+  document.getElementById('postPrice').value = p.price||0;
+  document.getElementById('postEta').value = p.eta||'';
+  if(p.img){ const pv=document.getElementById('postImgPreview'); pv.src=p.img; pv.style.display='block'; }
+  document.getElementById('postFormTitle').textContent = 'Edit post';
+  document.getElementById('postSaveBtn').textContent = 'Save changes';
+  document.getElementById('postCancelBtn').style.display = 'inline-block';
+  document.getElementById('tabPosts').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelPostEdit(){
+  editingPostIndex=-1;
+  clearPostForm();
+  document.getElementById('postFormTitle').textContent = 'Add post';
+  document.getElementById('postSaveBtn').textContent = 'Add post';
+  document.getElementById('postCancelBtn').style.display = 'none';
+}
+
+function clearPostForm(){
+  ['postTitle','postDesc','postImgUrl','postPrice','postEta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('postType').value = 'preorder';
+  const pv = document.getElementById('postImgPreview');
+  if(pv){ pv.src=''; pv.style.display='none'; }
+}
+
+function deletePost(i){
+  if(!confirm('Delete this post?')) return;
+  POSTS.splice(i,1);
+  saveData();
+  renderPostsAdmin();
+  renderFeed();
+  showToast('Post deleted.');
+}
+
+// =====================
+// STORE INFO
+// =====================
+function loadStoreInfo(){
+  const s = STORE_INFO;
+  ['Facebook','Tiktok','Instagram','Youtube','Email','Address','Other'].forEach(k=>{
+    const el = document.getElementById('si'+k);
+    if(el) el.value = s[k.toLowerCase()]||'';
+  });
+}
+
+function saveStoreInfo(){
+  STORE_INFO = {
+    facebook: document.getElementById('siFacebook').value.trim(),
+    tiktok: document.getElementById('siTiktok').value.trim(),
+    instagram: document.getElementById('siInstagram').value.trim(),
+    youtube: document.getElementById('siYoutube').value.trim(),
+    email: document.getElementById('siEmail').value.trim(),
+    address: document.getElementById('siAddress').value.trim(),
+    other: document.getElementById('siOther').value.trim(),
+  };
+  saveData();
+  renderFooter();
+  showToast('Store info saved!');
+}
+
+function renderFooter(){
+  const s = STORE_INFO;
+  const nameEl = document.getElementById('footerShopName');
+  if(nameEl) nameEl.textContent = APPEARANCE.shopName||'ZRS Performance';
+
+  const links = [];
+  if(s.facebook) links.push({icon:'📘', label:'Facebook', val:s.facebook, href: s.facebook.startsWith('http')?s.facebook:'https://'+s.facebook});
+  if(s.tiktok) links.push({icon:'🎵', label:'TikTok', val:s.tiktok, href: s.tiktok.startsWith('http')?s.tiktok:'https://tiktok.com/'+s.tiktok});
+  if(s.instagram) links.push({icon:'📷', label:'Instagram', val:s.instagram, href: s.instagram.startsWith('http')?s.instagram:'https://instagram.com/'+s.instagram.replace('@','')});
+  if(s.youtube) links.push({icon:'▶️', label:'YouTube', val:s.youtube, href: s.youtube.startsWith('http')?s.youtube:'https://'+s.youtube});
+  if(s.email) links.push({icon:'✉️', label:'Email', val:s.email, href:'mailto:'+s.email});
+  if(s.address) links.push({icon:'📍', label:'Address', val:s.address, href:null});
+  if(s.other){
+    const parts = s.other.split(':');
+    if(parts.length>=2){
+      const label = parts[0].trim();
+      const val = parts.slice(1).join(':').trim();
+      links.push({icon:'🔗', label, val, href: val.startsWith('http')?val:'https://'+val});
+    }
+  }
+
+  const container = document.getElementById('footerLinks');
+  if(!container) return;
+  container.innerHTML = links.map(l=>`
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:16px;">${l.icon}</span>
+      <div>
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.05em;">${l.label}</div>
+        ${l.href
+          ? `<a href="${l.href}" target="_blank" style="font-size:14px;color:#ddd;text-decoration:none;">${l.val}</a>`
+          : `<div style="font-size:14px;color:#ddd;">${l.val}</div>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+// =====================
+// SHEET SYNC
+// =====================
+let _syncTimer = null;
+// Split data into separate keys to avoid 50k char Sheet limit
+const SYNC_KEYS = ['products','preorders','vouchers','paymentQRs','completed','removed','appearance','posts','storeInfo'];
+
+function getSyncData(){
+  return {
+    products: PRODUCTS,
+    preorders: PREORDERS,
+    vouchers: VOUCHERS,
+    paymentQRs: PAYMENT_QRS,
+    completed: completedOrders,
+    removed: removedOrders,
+    appearance: APPEARANCE,
+    posts: POSTS,
+    storeInfo: STORE_INFO
+  };
+}
+
+function syncToSheet(){
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(()=>{ doSync(); }, 800);
+}
+
+async function doSync(){
+  const data = getSyncData();
+  let allOk = true;
+  for(const key of SYNC_KEYS){
+    try {
+      await fetch(SHEET_URL,{
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({type:'store_key', key, value: data[key]})
+      });
+    } catch(e){ allOk = false; }
+  }
+  return allOk;
+}
+
+async function loadFromSheet(){
+  try { // returns promise
+    const res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(SHEET_READ_URL+'?action=store')).then(r=>r.json()).then(d=>({json:()=>JSON.parse(d.contents)}));
+    const data = await res.json();
+    if(!data || !data.store) return;
+    const s = data.store;
+    // Update in-memory data only — no localStorage to avoid quota errors on buyer devices
+    if(s.products && s.products.length){ PRODUCTS = s.products; try{localStorage.setItem('zrs_products',JSON.stringify(PRODUCTS));}catch(e){} }
+    if(s.preorders){ PREORDERS = s.preorders; try{localStorage.setItem('zrs_preorders',JSON.stringify(PREORDERS));}catch(e){} }
+    if(s.vouchers){ VOUCHERS = s.vouchers; try{localStorage.setItem('zrs_vouchers',JSON.stringify(VOUCHERS));}catch(e){} }
+    if(s.paymentQRs){ PAYMENT_QRS = s.paymentQRs; try{localStorage.setItem('zrs_payment_qrs',JSON.stringify(PAYMENT_QRS));}catch(e){} }
+    if(s.completed){ completedOrders = s.completed; try{localStorage.setItem('zrs_completed',JSON.stringify(completedOrders));}catch(e){} }
+    if(s.removed){ removedOrders = s.removed; try{localStorage.setItem('zrs_removed',JSON.stringify(removedOrders));}catch(e){} }
+    if(s.appearance){ APPEARANCE = s.appearance; try{localStorage.setItem('zrs_appearance',JSON.stringify(APPEARANCE));}catch(e){} }
+    if(s.posts){ POSTS = s.posts; try{localStorage.setItem('zrs_posts',JSON.stringify(POSTS));}catch(e){} }
+    if(s.storeInfo){ STORE_INFO = s.storeInfo; try{localStorage.setItem('zrs_store_info',JSON.stringify(STORE_INFO));}catch(e){} }
+    // Re-render everything
+    renderProductList();
+    renderFeed();
+    renderVoucherAdmin();
+    renderPaymentQRAdmin();
+    applyAppearance(APPEARANCE);
+    renderFooter();
+  } catch(e){}
+}
+
+async function syncNow(){
+  const btn = document.getElementById('syncNowBtn');
+  btn.textContent = 'Syncing...';
+  btn.disabled = true;
+  clearTimeout(_syncTimer);
+  try {
+    await doSync();
+    btn.textContent = '✓ Synced!';
+    showToast('All data synced to Sheet!');
+  } catch(e){
+    btn.textContent = '⚠ Retry';
+    showToast('Sync failed — check internet and try again.');
+  }
+  setTimeout(()=>{ btn.textContent='↑ Sync now'; btn.disabled=false; }, 2500);
+}
+
+// =====================
+// INIT
+// =====================
+// Show skeletons immediately
+renderProductList();
+renderFeed();
+updateSummary();
+applyAppearance(APPEARANCE);
+
+// Load from Sheet then hide loader
+loadFromSheet().then(()=>{
+  const loader = document.getElementById('zrsLoader');
+  if(loader){ loader.classList.add('hidden'); setTimeout(()=>loader.remove(), 500); }
+}).catch(()=>{
+  const loader = document.getElementById('zrsLoader');
+  if(loader){ loader.classList.add('hidden'); setTimeout(()=>loader.remove(), 500); }
+});
+
+// Failsafe — remove loader after 8 seconds no matter what
+setTimeout(()=>{
+  const loader = document.getElementById('zrsLoader');
+  if(loader){ loader.classList.add('hidden'); setTimeout(()=>loader.remove(), 500); }
+}, 8000);
+</script>
+
+<!-- FOOTER -->
+<footer id="siteFooter" style="background:var(--black);padding:32px 20px 24px;margin-top:40px;">
+  <div style="max-width:620px;margin:0 auto;">
+    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;" id="footerShopName">ZRS Performance</div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px;" id="footerTagline">Performance Parts</div>
+    <div id="footerLinks" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;"></div>
+    <div style="border-top:1px solid #222;padding-top:16px;font-size:12px;color:#555;">
+      © <span id="footerYear"></span> ZRS Performance. All rights reserved.
+    </div>
+  </div>
+</footer>
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+</body>
+</html>
