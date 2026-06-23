@@ -1204,7 +1204,7 @@ function deleteVoucher(i){
 // =====================
 // ADMIN AUTH
 // =====================
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzzgROE2xbSKBsDPxvPYPl7mT3sU6oysHJnaWZ6ynoSsz05z9Tc6XDgafejHL1StNOL/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwGRtMqi4Kaw82dKJFMqWzhswpM9ZjQUrQh5usbDHqeIKEOdHmKa6iM7IuEXKBLL6R8/exec';
 
 async function sendToSheet(data){
   try{
@@ -1257,7 +1257,24 @@ function adminTab(btn, tabId){
 // =====================
 // ORDERS VIEWER
 // =====================
-const SHEET_READ_URL = 'https://script.google.com/macros/s/AKfycbzzgROE2xbSKBsDPxvPYPl7mT3sU6oysHJnaWZ6ynoSsz05z9Tc6XDgafejHL1StNOL/exec';
+// JSONP fetch — works around CORS for Google Apps Script GET requests
+function fetchJSONP(url){
+  return new Promise((resolve, reject)=>{
+    const cb = 'zrs_cb_'+Date.now();
+    const script = document.createElement('script');
+    script.src = url+'&callback='+cb;
+    window[cb] = function(data){
+      delete window[cb];
+      document.body.removeChild(script);
+      resolve({json:()=>data});
+    };
+    script.onerror = reject;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; reject(new Error('timeout')); } }, 10000);
+  });
+}
+
+const SHEET_READ_URL = 'https://script.google.com/macros/s/AKfycbwGRtMqi4Kaw82dKJFMqWzhswpM9ZjQUrQh5usbDHqeIKEOdHmKa6iM7IuEXKBLL6R8/exec';
 let currentOrdersView = 'orders';
 let completedOrders = null;
 
@@ -1286,7 +1303,7 @@ async function loadOrders(){
   completedList.style.display='none';
 
   try {
-    const res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(SHEET_READ_URL+'?action=read')).then(r=>r.json()).then(d=>({json:()=>JSON.parse(d.contents)}));
+    const res = await fetchJSONP(SHEET_READ_URL+'?action=read');
     const data = await res.json();
     loading.style.display='none';
 
@@ -2096,7 +2113,7 @@ async function doSync(){
 
 async function loadFromSheet(){
   try { // returns promise
-    const res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(SHEET_READ_URL+'?action=store')).then(r=>r.json()).then(d=>({json:()=>JSON.parse(d.contents)}));
+    const res = await fetchJSONP(SHEET_READ_URL+'?action=store');
     const data = await res.json();
     if(!data || !data.store) return;
     const s = data.store;
